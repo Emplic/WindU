@@ -82,6 +82,22 @@ Controls:ChipList({
 	Options = { "Motion", "Mobile", "Glass" },
 	Value = { "Motion", "Glass" },
 })
+Controls:Path2D({
+	Title = "Control Path",
+	Desc = "2D line draw and marker travel.",
+	Height = 118,
+	Duration = 0.95,
+	Points = {
+		{ 0.1, 0.5 },
+		{ 0.32, 0.22 },
+		{ 0.58, 0.68 },
+		{ 0.86, 0.34 },
+	},
+	Labels = {
+		{ Point = 1, Text = "A" },
+		{ Point = 4, Text = "B" },
+	},
+})
 
 local Logs = BoxTabs:Tab({
 	Title = "Logs",

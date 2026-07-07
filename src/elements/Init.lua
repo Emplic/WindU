@@ -26,6 +26,7 @@ return {
 		EmptyState = require("./EmptyState"),
 		DiscordCard = require("./DiscordCard"),
 		TabBox = require("./TabBox"),
+		Path2D = require("./Path2D"),
 		Section = require("./Section"),
 		Divider = require("./Divider"),
 		Space = require("./Space"),

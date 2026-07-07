@@ -299,6 +299,25 @@ do
 		},
 	})
 
+	AdvancedTab:Path2D({
+		Title = "Animated Path 2D",
+		Desc = "Line draw + marker travel animation",
+		Height = 132,
+		Duration = 1.1,
+		Points = {
+			{ 0.08, 0.68 },
+			{ 0.28, 0.34 },
+			{ 0.5, 0.52 },
+			{ 0.72, 0.24 },
+			{ 0.92, 0.42 },
+		},
+		Labels = {
+			{ Point = 1, Text = "Start" },
+			{ Point = 3, Text = "Sync" },
+			{ Point = 5, Text = "Done" },
+		},
+	})
+
 	AdvancedTab:Accordion({
 		Title = "Expandable Notes",
 		Desc = "Animated open and close rows",

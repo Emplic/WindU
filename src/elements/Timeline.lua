@@ -66,7 +66,7 @@ function Element:New(Config)
 
 			local Rail = New("Frame", {
 				Name = "Rail",
-				Size = UDim2.new(0, 24, 1, 0),
+				Size = UDim2.new(0, 24, 0, Item.Desc and 46 or 30),
 				BackgroundTransparency = 1,
 			}, {
 				New("Frame", {

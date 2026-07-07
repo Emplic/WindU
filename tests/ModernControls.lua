@@ -161,6 +161,19 @@ assert(Discord:SetInvite("new-code") == "https://discord.gg/new-code")
 Discord:SetTitle("Community")
 Discord:SetDesc("Updated invite card")
 
+local Path = Tab:Path2D({
+	Title = "Path",
+	Points = {
+		{ 0.1, 0.8 },
+		{ 0.35, 0.35 },
+		{ 0.75, 0.55 },
+	},
+	AutoPlay = false,
+})
+Path:Play()
+Path:Stop()
+assert(#Path:SetPoints({ { 0.1, 0.2 }, { 0.9, 0.8 } }) == 2)
+
 local Section = Tab:Section({
 	Title = "Box",
 	Box = true,

@@ -50,7 +50,9 @@ OverviewTab:Callout({
 	Variant = "Info",
 })
 
-local OverviewStats = OverviewTab:HStack()
+local OverviewStats = OverviewTab:HStack({
+	MinChildWidth = 220,
+})
 OverviewStats:StatusCard({
 	Title = "Build",
 	Status = "Success",
@@ -60,6 +62,25 @@ OverviewStats:StatCard({
 	Title = "Elements",
 	Value = "Modern",
 	SubValue = "Tabs + Discord + Settings",
+})
+
+OverviewTab:Path2D({
+	Title = "Path 2D",
+	Desc = "Animated route drawing with a moving marker.",
+	Height = 132,
+	Duration = 1.15,
+	Points = {
+		{ 0.08, 0.68 },
+		{ 0.26, 0.34 },
+		{ 0.48, 0.52 },
+		{ 0.68, 0.22 },
+		{ 0.9, 0.42 },
+	},
+	Labels = {
+		{ Point = 1, Text = "Start" },
+		{ Point = 3, Text = "Sync" },
+		{ Point = 5, Text = "Done" },
+	},
 })
 
 OverviewTab:KeyValue({
@@ -211,6 +232,22 @@ Controls:ChipList({
 	Title = "Filters",
 	Options = { "Motion", "Mobile", "Glass" },
 	Value = { "Motion", "Glass" },
+})
+Controls:Path2D({
+	Title = "Control Path",
+	Desc = "Replayable 2D path animation.",
+	Height = 118,
+	Duration = 0.95,
+	Points = {
+		{ 0.1, 0.5 },
+		{ 0.32, 0.22 },
+		{ 0.58, 0.68 },
+		{ 0.86, 0.34 },
+	},
+	Labels = {
+		{ Point = 1, Text = "A" },
+		{ Point = 4, Text = "B" },
+	},
 })
 
 local Logs = BoxTabs:Tab({

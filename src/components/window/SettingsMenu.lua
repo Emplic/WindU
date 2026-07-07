@@ -222,6 +222,17 @@ function SettingsMenu.New(Window, WindUI, Config)
 		}),
 	})
 
+	local Scrim = New("Frame", {
+		Name = "SettingsScrim",
+		Size = UDim2.new(1, 0, 1, 0),
+		BackgroundColor3 = Color3.new(0, 0, 0),
+		BackgroundTransparency = 1,
+		Visible = false,
+		Active = false,
+		ZIndex = 9998,
+		Parent = Window.UIElements.Main.Main,
+	})
+
 	local Content = New("CanvasGroup", {
 		Name = "Content",
 		Size = UDim2.new(1, 0, 1, 0),
@@ -246,6 +257,7 @@ function SettingsMenu.New(Window, WindUI, Config)
 
 	Menu.UIElements.Root = Root
 	Menu.UIElements.Scale = Root.Scale
+	Menu.UIElements.Scrim = Scrim
 	Menu.UIElements.Content = Content
 	Menu.UIElements.GlassLayer = Root.GlassLayer
 	Menu.UIElements.Outline = Root.Outline
@@ -745,15 +757,18 @@ function SettingsMenu.New(Window, WindUI, Config)
 		Menu:SelectTab(Menu.SelectedTab)
 		Root.Visible = true
 		Root.Active = true
+		Menu.UIElements.Scrim.Visible = true
 		Root.ImageTransparency = 1
+		Menu.UIElements.Scrim.BackgroundTransparency = 1
 		Menu.UIElements.Content.GroupTransparency = 1
 		Menu.UIElements.GlassLayer.ImageTransparency = 1
 		Menu.UIElements.Outline.ImageTransparency = 1
 		Menu.UIElements.Scale.Scale = 0.98
-		Motion.Play(Root, "DropdownOpen", { ImageTransparency = 0.06 }, nil, nil, "Settings")
+		Motion.Play(Root, "DropdownOpen", { ImageTransparency = 0.01 }, nil, nil, "Settings")
+		Motion.Play(Menu.UIElements.Scrim, "DropdownOpen", { BackgroundTransparency = 0.5 }, nil, nil, "SettingsScrim")
 		Motion.Play(Menu.UIElements.Content, "DropdownOpen", { GroupTransparency = 0 }, nil, nil, "SettingsContent")
-		Motion.Play(Menu.UIElements.GlassLayer, "DropdownOpen", { ImageTransparency = 0.72 }, nil, nil, "SettingsGlass")
-		Motion.Play(Menu.UIElements.Outline, "DropdownOpen", { ImageTransparency = 0.72 }, nil, nil, "SettingsOutline")
+		Motion.Play(Menu.UIElements.GlassLayer, "DropdownOpen", { ImageTransparency = 0.86 }, nil, nil, "SettingsGlass")
+		Motion.Play(Menu.UIElements.Outline, "DropdownOpen", { ImageTransparency = 0.62 }, nil, nil, "SettingsOutline")
 		Motion.Play(Menu.UIElements.Scale, "DropdownOpen", { Scale = 1 }, nil, nil, "SettingsScale")
 	end
 
@@ -767,6 +782,7 @@ function SettingsMenu.New(Window, WindUI, Config)
 		local Token = Menu.Token
 		Root.Active = false
 		Motion.Play(Root, "DropdownClose", { ImageTransparency = 1 }, nil, nil, "Settings")
+		Motion.Play(Menu.UIElements.Scrim, "DropdownClose", { BackgroundTransparency = 1 }, nil, nil, "SettingsScrim")
 		Motion.Play(Menu.UIElements.Content, "DropdownClose", { GroupTransparency = 1 }, nil, nil, "SettingsContent")
 		Motion.Play(Menu.UIElements.GlassLayer, "DropdownClose", { ImageTransparency = 1 }, nil, nil, "SettingsGlass")
 		Motion.Play(Menu.UIElements.Outline, "DropdownClose", { ImageTransparency = 1 }, nil, nil, "SettingsOutline")
@@ -774,6 +790,7 @@ function SettingsMenu.New(Window, WindUI, Config)
 		task.delay(Motion.GetDuration("DropdownClose"), function()
 			if Token == Menu.Token then
 				Root.Visible = false
+				Menu.UIElements.Scrim.Visible = false
 			end
 		end)
 	end

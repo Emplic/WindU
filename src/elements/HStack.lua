@@ -9,6 +9,7 @@ function Element:New(Config)
 		AutoSpace = Config.AutoSpace or false,
 		Elements = {},
 		ElementFrame = nil,
+		MinChildWidth = math.max(tonumber(Config.MinChildWidth) or 128, 40),
 	}
 
 	local HStackFrame = New("Frame", {
@@ -28,6 +29,58 @@ function Element:New(Config)
 	HStackModule.ElementFrame = HStackFrame
 
 	local ElementsModule = Config.ElementsModule
+	local function UpdateLayout(AllElements)
+		AllElements = AllElements or HStackModule.Elements
+		local Gap = Config.Tab and Config.Tab.Gap or (Config.Window.NewElements and 1 or 6)
+
+		local StretchableElements = {}
+		local TotalFixedWidth = 0
+		local ParentWidth = HStackFrame.AbsoluteSize.X / Config.UIScale
+
+		for _, Element in next, AllElements do
+			if Element.__type == "Space" then
+				TotalFixedWidth = TotalFixedWidth + (Element.ElementFrame.Size.X.Offset or 6)
+			elseif Element.__type == "Divider" then
+				TotalFixedWidth = TotalFixedWidth + (Element.ElementFrame.Size.X.Offset or 1)
+			else
+				table.insert(StretchableElements, Element)
+			end
+		end
+
+		local StretchCount = #StretchableElements
+		if StretchCount == 0 then
+			return
+		end
+
+		local TotalGapWidth = Gap * (StretchCount - 1)
+		local AvailableWidth = ParentWidth - TotalGapWidth - TotalFixedWidth
+		local ShouldStack = ParentWidth > 0 and AvailableWidth / StretchCount < HStackModule.MinChildWidth
+		local ElementWidthScale = ShouldStack and 1 or (1 / StretchCount)
+		local TotalOffset = ShouldStack and 0 or -(TotalGapWidth + TotalFixedWidth)
+		local BaseOffset = math.floor(TotalOffset / StretchCount)
+		local Remainder = TotalOffset - (BaseOffset * StretchCount)
+
+		HStackFrame.UIListLayout.FillDirection = ShouldStack and Enum.FillDirection.Vertical or Enum.FillDirection.Horizontal
+		HStackFrame.UIListLayout.HorizontalAlignment = ShouldStack and Enum.HorizontalAlignment.Left or Enum.HorizontalAlignment.Center
+
+		for i, Element in next, StretchableElements do
+			local Offset = ShouldStack and 0 or BaseOffset
+			if not ShouldStack and i <= math.abs(Remainder) then
+				Offset = Offset - 1
+			end
+
+			if Element.ElementFrame then
+				local CurrentSize = Element.ElementFrame.Size
+				Element.ElementFrame.Size = UDim2.new(
+					ElementWidthScale,
+					Offset,
+					CurrentSize.Y.Scale == 1 and 0 or CurrentSize.Y.Scale,
+					CurrentSize.Y.Scale == 1 and 0 or CurrentSize.Y.Offset
+				)
+			end
+		end
+	end
+
 	ElementsModule.Load(
 		HStackModule,
 		HStackFrame,
@@ -35,50 +88,16 @@ function Element:New(Config)
 		Config.Window,
 		Config.WindUI,
 		function(CurrentElement, AllElements)
-			local Gap = Config.Tab and Config.Tab.Gap or (Config.Window.NewElements and 1 or 6)
-
-			local StretchableElements = {}
-			local TotalFixedWidth = 0
-
-			for _, Element in next, AllElements do
-				if Element.__type == "Space" then
-					TotalFixedWidth = TotalFixedWidth + (Element.ElementFrame.Size.X.Offset or 6)
-				elseif Element.__type == "Divider" then
-					TotalFixedWidth = TotalFixedWidth + (Element.ElementFrame.Size.X.Offset or 1)
-				else
-					table.insert(StretchableElements, Element)
-				end
-			end
-
-			local StretchCount = #StretchableElements
-			if StretchCount == 0 then
-				return
-			end
-
-			local ElementWidthScale = 1 / StretchCount
-
-			local TotalGapWidth = Gap * (StretchCount - 1)
-
-			local TotalOffset = -(TotalGapWidth + TotalFixedWidth)
-
-			local BaseOffset = math.floor(TotalOffset / StretchCount)
-			local Remainder = TotalOffset - (BaseOffset * StretchCount)
-
-			for i, Element in next, StretchableElements do
-				local Offset = BaseOffset
-				if i <= math.abs(Remainder) then
-					Offset = Offset - 1
-				end
-
-				if Element.ElementFrame then
-					Element.ElementFrame.Size = UDim2.new(ElementWidthScale, Offset, 1, 0)
-				end
-			end
+			UpdateLayout(AllElements)
 		end,
 		ElementsModule,
 		Config.UIScale,
 		Config.Tab
 	)
+
+	Creator.AddSignal(HStackFrame:GetPropertyChangedSignal("AbsoluteSize"), function()
+		UpdateLayout()
+	end)
 
 	if HStackModule.AutoSpace then
 		for name in next, ElementsModule.Elements do

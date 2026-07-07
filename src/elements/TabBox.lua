@@ -107,10 +107,14 @@ function Element:New(Config)
 			OtherPage.UIElements.Container.Visible = IsSelected
 			OtherPage.UIElements.Container.Active = IsSelected
 			OtherPage.UIElements.Container.GroupTransparency = 1
+			if IsSelected then
+				OtherPage.UIElements.Container.Position = UDim2.new(0, 0, 0, 8)
+			end
 		end
 
 		UpdatePageHeight(Page)
 		Motion.Play(Page.UIElements.Container, "Switch", { GroupTransparency = 0 }, nil, nil, "Page")
+		Motion.Play(Page.UIElements.Container, "Switch", { Position = UDim2.new(0, 0, 0, 0) }, nil, nil, "PageSlide")
 		QueuePageHeightUpdate(Page, Index)
 		UpdateTabVisuals()
 		return Page
@@ -180,6 +184,7 @@ function Element:New(Config)
 			Name = "Page",
 			LayoutOrder = Index,
 			Size = UDim2.new(1, 0, 0, 0),
+			Position = UDim2.new(0, 0, 0, 0),
 			BackgroundTransparency = 1,
 			GroupTransparency = 1,
 			Visible = false,

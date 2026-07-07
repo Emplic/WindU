@@ -86,6 +86,11 @@ return function(Creator)
 		EmptyStateIcon = "Icon",
 		DiscordCardBackground = "ElementBackground",
 		DiscordCardAccent = "Primary",
+		Path2DBackground = "ElementBackground",
+		Path2DTrack = "ElementBackground",
+		Path2DLine = "Primary",
+		Path2DMarker = "Primary",
+		Path2DLabel = "Text",
 
 		PopupBackground = "Background",
 		PopupBackgroundTransparency = "BackgroundTransparency",
