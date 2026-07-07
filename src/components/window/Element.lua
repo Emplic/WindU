@@ -1,8 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Creator = require("../../modules/Creator")
+local Motion = require("../../modules/Motion")
 local New = Creator.New
 local NewRoundFrame = Creator.NewRoundFrame
-local Tween = Creator.Tween
 
 local cloneref = (cloneref or clonereference or function(instance)
 	return instance
@@ -452,26 +452,65 @@ return function(Config)
 	Element.UIElements.Locked = Locked
 
 	if Element.Hover then
+		Creator.AddSignal(Main.MouseMoved, function(x, y)
+			if CanHover and Main.AbsoluteSize.X > 0 then
+				Hover.HoverGradient.Offset = Vector2.new(((x - Main.AbsolutePosition.X) / Main.AbsoluteSize.X) - 0.5, 0)
+				HoverOutline.HoverGradient.Offset =
+					Vector2.new(((x - Main.AbsolutePosition.X) / Main.AbsoluteSize.X) - 0.5, 0)
+			end
+		end)
+
 		Creator.AddSignal(Main.MouseEnter, function()
 			if CanHover then
 				--Tween(Main, 0.12, { ImageTransparency = Element.Color and 0.15 or 0.9 }):Play()
-				Tween(Hover, 0.12, { ImageTransparency = 0.9 }):Play()
-				Tween(HoverOutline, 0.12, { ImageTransparency = 0.8 }):Play()
-				Creator.AddSignal(Main.MouseMoved, function(x, y)
-					Hover.HoverGradient.Offset =
-						Vector2.new(((x - Main.AbsolutePosition.X) / Main.AbsoluteSize.X) - 0.5, 0)
-					HoverOutline.HoverGradient.Offset =
-						Vector2.new(((x - Main.AbsolutePosition.X) / Main.AbsoluteSize.X) - 0.5, 0)
-				end)
+				HoverOutline.Visible = true
+				Motion.Play(Hover, "Hover", { ImageTransparency = 0.9 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Hover")
+				Motion.Play(
+					HoverOutline,
+					"Hover",
+					{ ImageTransparency = 0.8 },
+					Enum.EasingStyle.Quint,
+					Enum.EasingDirection.Out,
+					"Hover"
+				)
 			end
 		end)
 		Creator.AddSignal(Main.InputEnded, function()
 			if CanHover then
 				--Tween(Main, 0.12, { ImageTransparency = Element.Color and 0.05 or 0.93 }):Play()
-				Tween(Hover, 0.12, { ImageTransparency = 1 }):Play()
-				Tween(HoverOutline, 0.12, { ImageTransparency = 1 }):Play()
+				Motion.Play(Hover, "Hover", { ImageTransparency = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Hover")
+				Motion.Play(
+					HoverOutline,
+					"Hover",
+					{ ImageTransparency = 1 },
+					Enum.EasingStyle.Quint,
+					Enum.EasingDirection.Out,
+					"Hover"
+				)
 			end
 		end)
+		Creator.AddSignal(Main.MouseLeave, function()
+			if CanHover then
+				Motion.Play(Hover, "Hover", { ImageTransparency = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Hover")
+				Motion.Play(
+					HoverOutline,
+					"Hover",
+					{ ImageTransparency = 1 },
+					Enum.EasingStyle.Quint,
+					Enum.EasingDirection.Out,
+					"Hover"
+				)
+			end
+		end)
+	end
+
+	if Element.Scalable then
+		Motion.AttachPress(Main, Creator, {
+			Amount = 0.985,
+			Enabled = function()
+				return CanHover
+			end,
+		})
 	end
 
 	function Element:SetTitle(text)
@@ -673,16 +712,16 @@ return function(Config)
 		HighlightOutline.ImageTransparency = 0.65
 		Highlight.ImageTransparency = 0.88
 
-		Tween(OutlineGradient, 0.75, {
+		Motion.Play(OutlineGradient, "Highlight", {
 			Offset = Vector2.new(1, 0),
-		}):Play()
+		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Highlight")
 
-		Tween(HighlightGradient, 0.75, {
+		Motion.Play(HighlightGradient, "Highlight", {
 			Offset = Vector2.new(1, 0),
-		}):Play()
+		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Highlight")
 
 		task.spawn(function()
-			task.wait(0.75)
+			task.wait(Motion.GetDuration("Highlight"))
 			HighlightOutline.ImageTransparency = 1
 			Highlight.ImageTransparency = 1
 			OutlineGradient:Destroy()

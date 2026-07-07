@@ -1,4 +1,5 @@
 local Creator = require("../modules/Creator")
+local Motion = require("../modules/Motion")
 local New = Creator.New
 local Tween = Creator.Tween
 
@@ -270,29 +271,45 @@ function NotificationModule.New(Config)
 	function Notification:Close()
 		if not Notification.Closed then
 			Notification.Closed = true
-			Tween(
+			Motion.Play(
 				MainContainer,
-				0.45,
+				"NotificationClose",
 				{ Size = UDim2.new(1, 0, 0, -8) },
 				Enum.EasingStyle.Quint,
-				Enum.EasingDirection.Out
-			):Play()
-			Tween(Main, 0.55, { Position = UDim2.new(2, 0, 1, 0) }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
-			task.wait(0.45)
+				Enum.EasingDirection.Out,
+				"Close"
+			)
+			Motion.Play(
+				Main,
+				"NotificationClose",
+				{ Position = UDim2.new(2, 0, 1, 0) },
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.Out,
+				"Close"
+			)
+			task.wait(Motion.GetDuration("NotificationClose") + 0.03)
 			MainContainer:Destroy()
 		end
 	end
 
 	task.spawn(function()
 		task.wait()
-		Tween(
+		Motion.Play(
 			MainContainer,
-			0.45,
+			"Notification",
 			{ Size = UDim2.new(1, 0, 0, Main.AbsoluteSize.Y) },
 			Enum.EasingStyle.Quint,
-			Enum.EasingDirection.Out
-		):Play()
-		Tween(Main, 0.45, { Position = UDim2.new(0, 0, 1, 0) }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+			Enum.EasingDirection.Out,
+			"Open"
+		)
+		Motion.Play(
+			Main,
+			"Notification",
+			{ Position = UDim2.new(0, 0, 1, 0) },
+			Enum.EasingStyle.Quint,
+			Enum.EasingDirection.Out,
+			"Open"
+		)
 		if Notification.Duration then
 			Duration.Size = UDim2.new(0, Main.DurationFrame.AbsoluteSize.X, 1, 0)
 			Tween(

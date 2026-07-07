@@ -13,6 +13,7 @@ local CurrentCamera = workspace.CurrentCamera
 local CreateInput = require("./Input").New
 
 local Creator = require("../../modules/Creator")
+local Motion = require("../../modules/Motion")
 local New = Creator.New
 local Tween = Creator.Tween
 
@@ -589,20 +590,24 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 	RecalculateListSize()
 	RecalculateCanvasSize()
 
+	local MenuMotionToken = 0
+
 	function DropdownModule:Open()
 		if not Dropdown.Locked then
+			MenuMotionToken += 1
+			local Token = MenuMotionToken
 			Dropdown.UIElements.Menu.Visible = true
 			Dropdown.UIElements.MenuCanvas.Visible = true
 			Dropdown.UIElements.MenuCanvas.Active = true
 			Dropdown.UIElements.Menu.Size = UDim2.new(1, 0, 0, 0)
-			Tween(Dropdown.UIElements.Menu, 0.1, {
+			Motion.Play(Dropdown.UIElements.Menu, "DropdownOpen", {
 				Size = UDim2.new(1, 0, 1, 0),
 				ImageTransparency = 0,
-			}, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
+			}, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, "OpenClose")
 
 			task.spawn(function()
-				task.wait(0.1)
-				if Dropdown.Locked then
+				task.wait(Motion.GetDuration("DropdownOpen"))
+				if Dropdown.Locked or MenuMotionToken ~= Token then
 					return
 				end
 				Dropdown.Opened = true
@@ -613,20 +618,21 @@ function DropdownMenu.New(Config, Dropdown, Element, Type)
 	end
 
 	function DropdownModule:Close()
+		MenuMotionToken += 1
+		local Token = MenuMotionToken
 		Dropdown.Opened = false
 
-		Tween(Dropdown.UIElements.Menu, 0.25, {
+		Motion.Play(Dropdown.UIElements.Menu, "DropdownClose", {
 			Size = UDim2.new(1, 0, 0, 0),
 			ImageTransparency = 1,
-		}, Enum.EasingStyle.Quart, Enum.EasingDirection.Out):Play()
+		}, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, "OpenClose")
 
 		task.spawn(function()
-			task.wait(0.1)
+			task.wait(Motion.GetDuration("DropdownClose"))
+			if MenuMotionToken ~= Token then
+				return
+			end
 			Dropdown.UIElements.Menu.Visible = false
-		end)
-
-		task.spawn(function()
-			task.wait(0.25)
 			Dropdown.UIElements.MenuCanvas.Visible = false
 			Dropdown.UIElements.MenuCanvas.Active = false
 		end)

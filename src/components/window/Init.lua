@@ -13,6 +13,7 @@ local CurrentCamera = workspace.CurrentCamera
 local Acrylic = require("../../utils/Acrylic/Init")
 
 local Creator = require("../../modules/Creator")
+local Motion = require("../../modules/Motion")
 local New = Creator.New
 local Tween = Creator.Tween
 
@@ -59,6 +60,7 @@ return function(Config)
 		SideBarWidth = Config.SideBarWidth or 200,
 		Acrylic = Config.Acrylic or false,
 		NewElements = Config.NewElements or false,
+		Motion = Config.Motion,
 		IgnoreAlerts = Config.IgnoreAlerts or false,
 		HidePanelBackground = Config.HidePanelBackground or false,
 		AutoScale = Config.AutoScale ~= false,
@@ -984,59 +986,62 @@ return function(Config)
 		end)
 		Creator.AddSignal(Button.MouseEnter, function()
 			if Window.Topbar.ButtonsType == "Default" then
-				Tween(Button, 0.15, { ImageTransparency = 0.93 }):Play()
+				Motion.Play(Button, "Hover", { ImageTransparency = 0.93 }, nil, nil, "Hover")
 				--Tween(Button.Outline, 0.15, { ImageTransparency = 0.75 }):Play()
 				--Tween(IconFrame.ImageLabel, .15, {ImageTransparency = 0}):Play()
 			else
 				--Tween(Button, .1, {Size = UDim2.new(0,14+8,0,14+8)}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
-				Tween(
+				Motion.Play(
 					IconFrame.ImageLabel,
-					0.1,
+					"Hover",
 					{ ImageTransparency = 0 },
 					Enum.EasingStyle.Quint,
-					Enum.EasingDirection.Out
-				):Play()
-				Tween(IconFrame, 0.1, {
+					Enum.EasingDirection.Out,
+					"Hover"
+				)
+				Motion.Play(IconFrame, "Hover", {
 					Size = UDim2.new(
 						0,
 						IconSize or Window.TopBarButtonIconSize,
 						0,
 						IconSize or Window.TopBarButtonIconSize
 					),
-				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Hover")
 			end
 		end)
 
 		Creator.AddSignal(Button.MouseButton1Down, function()
-			Tween(Button.UIScale, 0.2, { Scale = 0.9 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+			Motion.Play(Button.UIScale, "Press", { Scale = 0.9 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Press")
 		end)
 
 		Creator.AddSignal(Button.MouseLeave, function()
 			if Window.Topbar.ButtonsType == "Default" then
-				Tween(Button, 0.1, { ImageTransparency = 1 }):Play()
+				Motion.Play(Button, "Hover", { ImageTransparency = 1 }, nil, nil, "Hover")
 				--Tween(Button.Outline, 0.1, { ImageTransparency = 1 }):Play()
 				--Tween(IconFrame.ImageLabel, .1, {ImageTransparency = .2}):Play()
 			else
 				--Tween(Button, .1, {Size = UDim2.new(0,14,0,14)}, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut):Play()
-				Tween(
+				Motion.Play(
 					IconFrame.ImageLabel,
-					0.1,
+					"Hover",
 					{ ImageTransparency = 1 },
 					Enum.EasingStyle.Quint,
-					Enum.EasingDirection.Out
-				):Play()
-				Tween(
+					Enum.EasingDirection.Out,
+					"Hover"
+				)
+				Motion.Play(
 					IconFrame,
-					0.1,
+					"Hover",
 					{ Size = UDim2.new(0, 0, 0, 0) },
 					Enum.EasingStyle.Quint,
-					Enum.EasingDirection.Out
-				):Play()
+					Enum.EasingDirection.Out,
+					"Hover"
+				)
 			end
 		end)
 
 		Creator.AddSignal(Button.InputEnded, function()
-			Tween(Button.UIScale, 0.2, { Scale = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut):Play()
+			Motion.Play(Button.UIScale, "Press", { Scale = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Press")
 		end)
 
 		return Button
@@ -1211,22 +1216,19 @@ return function(Config)
 	)
 
 	local function SetSize(isAnimation)
-		Tween(Window.UIElements.Main, 0.45, {
+		Motion.Play(Window.UIElements.Main, "Resize", {
 			Size = not Window.IsFullscreen and CurrentSize or UDim2.new(
 				0,
 				(Config.WindUI.ScreenGui.AbsoluteSize.X - 20) / Config.WindUI.UIScale,
 				0,
 				(Config.WindUI.ScreenGui.AbsoluteSize.Y - 20 - 52) / Config.WindUI.UIScale
 			),
-		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
-
-		Tween(
-			Window.UIElements.Main,
-			0.45,
-			{ Position = not Window.IsFullscreen and CurrentPos or UDim2.new(0.5, 0, 0.5, 52 / 2) },
+			Position = not Window.IsFullscreen and CurrentPos or UDim2.new(0.5, 0, 0.5, 52 / 2),
+		},
 			Enum.EasingStyle.Quint,
-			Enum.EasingDirection.Out
-		):Play()
+			Enum.EasingDirection.Out,
+			"Fullscreen"
+		)
 	end
 
 	function Window:ToggleFullscreen()
@@ -1329,30 +1331,30 @@ return function(Config)
 
 			Window.UIElements.Main.Size = UDim2.new(Window.Size.X.Scale, Window.Size.X.Offset, 0, 100)
 
-			Tween(Window.UIElements.Main, 0.8, {
+			Motion.Play(Window.UIElements.Main, "WindowOpen", {
 				--GroupTransparency = 0,
 				Size = Window.Size,
-			}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+			}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Window")
 
 			if Window.UIElements.BackgroundGradient then
-				Tween(Window.UIElements.BackgroundGradient, 0.2, {
+				Motion.Play(Window.UIElements.BackgroundGradient, "Focus", {
 					ImageTransparency = 0,
-				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Window")
 			end
 
 			Window.UIElements.Main.Background.ImageTransparency = 1
-			Tween(Window.UIElements.Main.Background, 0.4, {
+			Motion.Play(Window.UIElements.Main.Background, "WindowOpen", {
 				--Size = UDim2.new(1, 0, 1, 0),
 				ImageTransparency = Window.Transparent and Config.WindUI.TransparencyValue or 0,
-			}, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out):Play()
+			}, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out, "WindowBackground")
 
 			if BGImage then
 				if BGImage:IsA("VideoFrame") then
 					BGImage.Visible = true
 				else
-					Tween(BGImage, 0.2, {
+					Motion.Play(BGImage, "Focus", {
 						ImageTransparency = Window.BackgroundImageTransparency,
-					}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+					}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Window")
 				end
 			end
 
@@ -1368,34 +1370,37 @@ return function(Config)
 				Enum.EasingStyle.Back,
 				Enum.EasingDirection.Out
 			):Play()]]
-			Tween(
+			Motion.Play(
 				Blur,
-				0.25,
+				"WindowOpen",
 				{ ImageTransparency = Window.ShadowTransparency },
 				Enum.EasingStyle.Quint,
-				Enum.EasingDirection.Out
-			):Play()
+				Enum.EasingDirection.Out,
+				"Window"
+			)
 			--[[if UIStroke then
 				Tween(UIStroke, 0.25, { Transparency = 0.8 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
 			end]]
 
-			Tween(
+			Motion.Play(
 				BottomDragFrame,
-				0.45,
+				"WindowOpen",
 				{ Size = UDim2.new(0, Window.DragFrameSize, 0, 4), ImageTransparency = 0.8 },
 				Enum.EasingStyle.Exponential,
-				Enum.EasingDirection.Out
-			):Play()
+				Enum.EasingDirection.Out,
+				"Window"
+			)
 			WindowDragModule:Set(true)
 
 			if Window.Resizable then
-				Tween(
+				Motion.Play(
 					ResizeHandle.ImageLabel,
-					0.45,
+					"WindowOpen",
 					{ ImageTransparency = 0.8 },
 					Enum.EasingStyle.Exponential,
-					Enum.EasingDirection.Out
-				):Play()
+					Enum.EasingDirection.Out,
+					"Window"
+				)
 				Window.CanResize = true
 			end
 
@@ -1432,20 +1437,20 @@ return function(Config)
 		Window.CanDropdown = false
 		Window.Closed = true
 
-		Tween(Window.UIElements.Main, 0.9, {
+		Motion.Play(Window.UIElements.Main, "WindowClose", {
 			--GroupTransparency = 1,
 			Size = UDim2.new(Window.Size.X.Scale, Window.Size.X.Offset, 0, 0),
-		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Window")
 		if Window.UIElements.BackgroundGradient then
-			Tween(Window.UIElements.BackgroundGradient, 0.2, {
+			Motion.Play(Window.UIElements.BackgroundGradient, "Fast", {
 				ImageTransparency = 1,
-			}, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut):Play()
+			}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Window")
 		end
 
-		Tween(Window.UIElements.Main.Background, 0.3, {
+		Motion.Play(Window.UIElements.Main.Background, "WindowClose", {
 			--Size = UDim2.new(1, 0, 1, -240),
 			ImageTransparency = 1,
-		}, Enum.EasingStyle.Exponential, Enum.EasingDirection.InOut):Play()
+		}, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out, "WindowBackground")
 
 		--[[Tween(
 			Config.WindUI.UIScaleObj,
@@ -1458,35 +1463,37 @@ return function(Config)
 			if BGImage:IsA("VideoFrame") then
 				BGImage.Visible = false
 			else
-				Tween(BGImage, 0.3, {
+				Motion.Play(BGImage, "WindowClose", {
 					ImageTransparency = 1,
-				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Window")
 			end
 		end
-		Tween(Blur, 0.25, { ImageTransparency = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+		Motion.Play(Blur, "WindowClose", { ImageTransparency = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Window")
 		--[[if UIStroke then
 			Tween(UIStroke, 0.25, { Transparency = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
 		end]]
 
-		Tween(
+		Motion.Play(
 			BottomDragFrame,
-			0.3,
+			"WindowClose",
 			{ Size = UDim2.new(0, 0, 0, 4), ImageTransparency = 1 },
 			Enum.EasingStyle.Exponential,
-			Enum.EasingDirection.InOut
-		):Play()
-		Tween(
+			Enum.EasingDirection.Out,
+			"Window"
+		)
+		Motion.Play(
 			ResizeHandle.ImageLabel,
-			0.3,
+			"WindowClose",
 			{ ImageTransparency = 1 },
 			Enum.EasingStyle.Exponential,
-			Enum.EasingDirection.Out
-		):Play()
+			Enum.EasingDirection.Out,
+			"Window"
+		)
 		WindowDragModule:Set(false)
 		Window.CanResize = false
 
 		task.spawn(function()
-			task.wait(0.4)
+			task.wait(Motion.GetDuration("WindowClose") + 0.05)
 
 			if not Window.Closed then
 				return

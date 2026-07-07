@@ -78,6 +78,10 @@ local Window = WindUI:CreateWindow({
 	--Theme = "Mellowsi",
 	--IconSize = 22*2,
 	NewElements = true,
+	Motion = {
+		Preset = "Subtle",
+		Reduced = false,
+	},
 	--Size = UDim2.fromOffset(700,700),
 
 	HideSearchBar = false,
@@ -137,6 +141,24 @@ do
 		Title = "Modern controls pack",
 		Desc = "Additive components that keep old scripts compatible.",
 		Variant = "Info",
+	})
+
+	ModernTab:SegmentedControl({
+		Title = "Motion",
+		Options = { "Subtle", "None" },
+		Value = "Subtle",
+		Callback = function(Value)
+			WindUI:SetMotionPreset(Value)
+		end,
+	})
+
+	ModernTab:Toggle({
+		Title = "Reduced motion",
+		Desc = "Drop movement and keep fast opacity/state transitions",
+		Value = false,
+		Callback = function(Value)
+			WindUI:SetReducedMotion(Value)
+		end,
 	})
 
 	ModernTab:RadioGroup({

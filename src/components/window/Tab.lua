@@ -8,6 +8,7 @@ local UserInputService = cloneref(game:GetService("UserInputService"))
 local Mouse = Players.LocalPlayer:GetMouse()
 
 local Creator = require("../../modules/Creator")
+local Motion = require("../../modules/Motion")
 local New = Creator.New
 
 local CreateToolTip = require("../ui/Tooltip").New
@@ -427,17 +428,17 @@ function TabModule.New(Config, UIScale)
 	function Tab:ScrollToTheElement(elemindex)
 		Tab.UIElements.ContainerFrame.ScrollingEnabled = false
 
-		Creator.Tween(Tab.UIElements.ContainerFrame, 0.45, {
+		Motion.Play(Tab.UIElements.ContainerFrame, "Resize", {
 			CanvasPosition = Vector2.new(
 				0,
 				Tab.Elements[elemindex].ElementFrame.AbsolutePosition.Y
 					- Tab.UIElements.ContainerFrame.AbsolutePosition.Y
 					- Tab.UIElements.ContainerFrame.UIPadding.PaddingTop.Offset
 			),
-		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "ScrollToElement")
 
 		task.spawn(function()
-			task.wait(0.48)
+			task.wait(Motion.GetDuration("Resize") + 0.03)
 
 			if Tab.Elements[elemindex].Highlight then
 				Tab.Elements[elemindex]:Highlight()
@@ -631,13 +632,9 @@ function TabModule:SelectTab(TabIndex)
 				ContainerObject.Visible = false
 			end
 			TabModule.Containers[TabIndex].Visible = true
-			local TweenService = game:GetService("TweenService")
-
-			local tweenInfo = TweenInfo.new(0.15, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-			local tween = TweenService:Create(TabModule.Containers[TabIndex], tweenInfo, {
+			Motion.Play(TabModule.Containers[TabIndex], "Select", {
 				AnchorPoint = Vector2.new(0, 0),
-			})
-			tween:Play()
+			}, Enum.EasingStyle.Quart, Enum.EasingDirection.Out, "Select")
 		end)
 
 		TabModule.OnChangeFunc(TabIndex)

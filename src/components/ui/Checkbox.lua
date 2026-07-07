@@ -1,8 +1,8 @@
 local Checkbox = {}
 
 local Creator = require("../../modules/Creator")
+local Motion = require("../../modules/Motion")
 local New = Creator.New
-local Tween = Creator.Tween
 
 
 function Checkbox.New(Value, Icon, IconSize, Parent, Callback, Config)
@@ -65,25 +65,25 @@ function Checkbox.New(Value, Icon, IconSize, Parent, Callback, Config)
     
     function Checkbox:Set(Toggled)
         if Toggled then
-            Tween(CheckboxFrame.Layer, 0.06, {
+            Motion.Play(CheckboxFrame.Layer, "Fast", {
                 ImageTransparency = 0,
-            }):Play()
+            }, nil, nil, "State")
             --[[Tween(CheckboxFrame.Stroke, 0.06, {
                 ImageTransparency = 0.95,
             }):Play()--]]
-            Tween(IconCheckboxFrame.ImageLabel, 0.06, {
+            Motion.Play(IconCheckboxFrame.ImageLabel, "Fast", {
                 ImageTransparency = 0,
-            }):Play()
+            }, nil, nil, "State")
         else
-            Tween(CheckboxFrame.Layer, 0.05, {
+            Motion.Play(CheckboxFrame.Layer, "Fast", {
                 ImageTransparency = 1,
-            }):Play()
+            }, nil, nil, "State")
             --[[Tween(CheckboxFrame.Stroke, 0.05, {
                 ImageTransparency = 1,
             }):Play()--]]
-            Tween(IconCheckboxFrame.ImageLabel, 0.06, {
+            Motion.Play(IconCheckboxFrame.ImageLabel, "Fast", {
                 ImageTransparency = 1,
-            }):Play()
+            }, nil, nil, "State")
         end
 
         task.spawn(function()

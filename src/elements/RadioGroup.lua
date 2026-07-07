@@ -1,6 +1,6 @@
 local Creator = require("../modules/Creator")
+local Motion = require("../modules/Motion")
 local New = Creator.New
-local Tween = Creator.Tween
 
 local Utils = require("./ModernControlUtils")
 
@@ -23,6 +23,7 @@ function Element:New(Config)
 		Callback = Config.Callback or function() end,
 		UIElements = {},
 		OptionFrames = {},
+		Animation = Config.Animation ~= false,
 
 		Width = GetControlWidth(Config),
 	}
@@ -77,10 +78,10 @@ function Element:New(Config)
 			local DotTransparency = Selected and 0 or 1
 			local TitleTransparency = Data.Option.Disabled and 0.55 or (Selected and 0 or 0.18)
 
-			if IsAnimated then
-				Tween(Data.Row, 0.12, { ImageTransparency = RowTransparency }):Play()
-				Tween(Data.Dot, 0.12, { ImageTransparency = DotTransparency }):Play()
-				Tween(Data.Title, 0.12, { TextTransparency = TitleTransparency }):Play()
+			if IsAnimated and RadioGroup.Animation then
+				Motion.Play(Data.Row, "Select", { ImageTransparency = RowTransparency }, nil, nil, "Select")
+				Motion.Play(Data.Dot, "Select", { ImageTransparency = DotTransparency }, nil, nil, "Select")
+				Motion.Play(Data.Title, "Select", { TextTransparency = TitleTransparency }, nil, nil, "Select")
 			else
 				Data.Row.ImageTransparency = RowTransparency
 				Data.Dot.ImageTransparency = DotTransparency
@@ -161,6 +162,12 @@ function Element:New(Config)
 			Option = Option,
 		}
 		RadioGroup.OptionFrames[Index] = Data
+
+		Motion.AttachPress(Row, Creator, {
+			Enabled = function()
+				return RadioGroup.Animation and not RadioGroup.Locked and not Option.Disabled
+			end,
+		})
 
 		Creator.AddSignal(Row.MouseButton1Click, function()
 			if not Option.Disabled then

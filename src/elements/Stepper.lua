@@ -1,6 +1,6 @@
 local Creator = require("../modules/Creator")
+local Motion = require("../modules/Motion")
 local New = Creator.New
-local Tween = Creator.Tween
 
 local Utils = require("./ModernControlUtils")
 
@@ -42,6 +42,7 @@ function Element:New(Config)
 		Callback = Config.Callback or function() end,
 		Format = Config.Format,
 		UIElements = {},
+		Animation = Config.Animation ~= false,
 
 		Width = math.max(Utils.ToFiniteNumber(Config.Width) or Utils.ToFiniteNumber(Config.ControlWidth) or 150, 128),
 	}
@@ -106,6 +107,19 @@ function Element:New(Config)
 	local MinusButton, MinusIcon = CreateIconButton("Minus", "minus")
 	local PlusButton, PlusIcon = CreateIconButton("Plus", "plus")
 
+	Motion.AttachPress(MinusButton, Creator, {
+		Amount = 0.94,
+		Enabled = function()
+			return Stepper.Animation and not Stepper.Locked and Stepper.Value.Default > Stepper.Value.Min
+		end,
+	})
+	Motion.AttachPress(PlusButton, Creator, {
+		Amount = 0.94,
+		Enabled = function()
+			return Stepper.Animation and not Stepper.Locked and Stepper.Value.Default < Stepper.Value.Max
+		end,
+	})
+
 	Stepper.UIElements.ValueLabel = New("TextLabel", {
 		Name = "Value",
 		Size = UDim2.new(1, -78, 0, 34),
@@ -155,9 +169,9 @@ function Element:New(Config)
 		local MinusTransparency = AtMin and 0.7 or 0
 		local PlusTransparency = AtMax and 0.7 or 0
 
-		if IsAnimated then
-			Tween(MinusIcon, 0.1, { ImageTransparency = MinusTransparency }):Play()
-			Tween(PlusIcon, 0.1, { ImageTransparency = PlusTransparency }):Play()
+		if IsAnimated and Stepper.Animation then
+			Motion.Play(MinusIcon, "Fast", { ImageTransparency = MinusTransparency }, nil, nil, "State")
+			Motion.Play(PlusIcon, "Fast", { ImageTransparency = PlusTransparency }, nil, nil, "State")
 		else
 			MinusIcon.ImageTransparency = MinusTransparency
 			PlusIcon.ImageTransparency = PlusTransparency
@@ -170,9 +184,19 @@ function Element:New(Config)
 			return Stepper.Value.Default
 		end
 
+		local PreviousValue = Stepper.Value.Default
 		Stepper.Value.Default = math.clamp(Number, Stepper.Value.Min, Stepper.Value.Max)
 		Stepper.UIElements.ValueLabel.Text = FormatValue(Stepper.Value.Default)
 		UpdateButtonStates(true)
+
+		if Stepper.Animation and PreviousValue ~= Stepper.Value.Default then
+			Motion.Play(ValueBackground, "Fast", { ImageTransparency = 0.9 }, nil, nil, "Pulse")
+			task.delay(Motion.GetDuration("Fast"), function()
+				if ValueBackground.Parent then
+					Motion.Play(ValueBackground, "Select", { ImageTransparency = 0.94 }, nil, nil, "Pulse")
+				end
+			end)
+		end
 
 		if CanCallback and IsCallback ~= false then
 			Creator.SafeCallback(Stepper.Callback, Stepper.Value.Default)

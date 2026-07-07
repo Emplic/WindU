@@ -1,8 +1,8 @@
 local Input = {}
 
 local Creator = require("../../modules/Creator")
+local Motion = require("../../modules/Motion")
 local New = Creator.New
-local Tween = Creator.Tween
 
 function Input.New(Placeholder, Icon, Parent, Type, Callback, OnChange, Radius, ClearTextOnFocus, RemoveGlass)
 	Type = Type or "Input"
@@ -42,6 +42,48 @@ function Input.New(Placeholder, Icon, Parent, Type, Callback, OnChange, Radius, 
 		},
 	})
 
+	local PlaceholderFrame = Creator.NewRoundFrame(Radius, "Squircle", {
+		ThemeTag = {
+			ImageColor3 = "Placeholder",
+		},
+		Size = UDim2.new(1, 0, 1, 0),
+		ImageTransparency = 0.85,
+	})
+	local OutlineFrame = not RemoveGlass and Creator.NewRoundFrame(Radius - 1, "SquircleGlass", {
+		ThemeTag = {
+			ImageColor3 = "Outline",
+		},
+		Size = UDim2.new(1, 1, 1, 1),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		ImageTransparency = 0.8,
+	}) or nil
+	local ContentFrame = Creator.NewRoundFrame(Radius, "Squircle", {
+		Size = UDim2.new(1, 0, 1, 0),
+		Name = "Frame",
+		ThemeTag = {
+			ImageColor3 = "LabelBackground",
+			ImageTransparency = "LabelBackgroundTransparency",
+		},
+		--[[ImageColor3 = Color3.new(1, 1, 1),
+		ImageTransparency = 1,]]
+	}, {
+		New("UIPadding", {
+			PaddingTop = UDim.new(0, Type ~= "Textarea" and 0 or 12),
+			PaddingLeft = UDim.new(0, 12),
+			PaddingRight = UDim.new(0, 12),
+			PaddingBottom = UDim.new(0, Type ~= "Textarea" and 0 or 12),
+		}),
+		New("UIListLayout", {
+			FillDirection = "Horizontal",
+			Padding = UDim.new(0, 8),
+			VerticalAlignment = Type ~= "Textarea" and "Center" or "Top",
+			HorizontalAlignment = "Left",
+		}),
+		IconInputFrame,
+		TextBox,
+	})
+
 	local InputFrame = New("Frame", {
 		Size = UDim2.new(1, 0, 0, 42),
 		Parent = Parent,
@@ -51,47 +93,9 @@ function Input.New(Placeholder, Icon, Parent, Type, Callback, OnChange, Radius, 
 			Size = UDim2.new(1, 0, 1, 0),
 			BackgroundTransparency = 1,
 		}, {
-			Creator.NewRoundFrame(Radius, "Squircle", {
-				ThemeTag = {
-					ImageColor3 = "Placeholder",
-				},
-				Size = UDim2.new(1, 0, 1, 0),
-				ImageTransparency = 0.85,
-			}),
-			not RemoveGlass and Creator.NewRoundFrame(Radius - 1, "SquircleGlass", {
-				ThemeTag = {
-					ImageColor3 = "Outline",
-				},
-				Size = UDim2.new(1, 1, 1, 1),
-				AnchorPoint = Vector2.new(0.5, 0.5),
-				Position = UDim2.new(0.5, 0, 0.5, 0),
-				ImageTransparency = 0.8,
-			}) or nil,
-			Creator.NewRoundFrame(Radius, "Squircle", {
-				Size = UDim2.new(1, 0, 1, 0),
-				Name = "Frame",
-				ThemeTag = {
-					ImageColor3 = "LabelBackground",
-					ImageTransparency = "LabelBackgroundTransparency",
-				},
-				--[[ImageColor3 = Color3.new(1, 1, 1),
-				ImageTransparency = 1,]]
-			}, {
-				New("UIPadding", {
-					PaddingTop = UDim.new(0, Type ~= "Textarea" and 0 or 12),
-					PaddingLeft = UDim.new(0, 12),
-					PaddingRight = UDim.new(0, 12),
-					PaddingBottom = UDim.new(0, Type ~= "Textarea" and 0 or 12),
-				}),
-				New("UIListLayout", {
-					FillDirection = "Horizontal",
-					Padding = UDim.new(0, 8),
-					VerticalAlignment = Type ~= "Textarea" and "Center" or "Top",
-					HorizontalAlignment = "Left",
-				}),
-				IconInputFrame,
-				TextBox,
-			}),
+			PlaceholderFrame,
+			OutlineFrame,
+			ContentFrame,
 		}),
 	})
 
@@ -117,6 +121,19 @@ function Input.New(Placeholder, Icon, Parent, Type, Callback, OnChange, Radius, 
 			end
 		end)
 	end
+
+	Creator.AddSignal(TextBox.Focused, function()
+		Motion.Play(PlaceholderFrame, "Focus", { ImageTransparency = 0.78 }, nil, nil, "Focus")
+		if OutlineFrame then
+			Motion.Play(OutlineFrame, "Focus", { ImageTransparency = 0.65 }, nil, nil, "Focus")
+		end
+	end)
+	Creator.AddSignal(TextBox.FocusLost, function()
+		Motion.Play(PlaceholderFrame, "Focus", { ImageTransparency = 0.85 }, nil, nil, "Focus")
+		if OutlineFrame then
+			Motion.Play(OutlineFrame, "Focus", { ImageTransparency = 0.8 }, nil, nil, "Focus")
+		end
+	end)
 
 	return InputFrame
 end

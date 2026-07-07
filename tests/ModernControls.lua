@@ -1,8 +1,15 @@
 local WindUI = require("../src/Init")
 
+assert(WindUI:SetMotionPreset("Subtle").Preset == "Subtle")
+assert(WindUI:SetReducedMotion(false).Reduced == false)
+
 local Window = WindUI:CreateWindow({
 	Title = "Modern Controls Test",
 	NewElements = true,
+	Motion = {
+		Preset = "Subtle",
+		Reduced = false,
+	},
 })
 
 local Tab = Window:Tab({
@@ -13,6 +20,7 @@ local Radio = Tab:RadioGroup({
 	Title = "Radio group",
 	Options = { "Low", "Medium", "High" },
 	Value = "Medium",
+	Animation = false,
 })
 
 assert(Radio:Get() == "Medium")

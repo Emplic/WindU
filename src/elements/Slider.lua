@@ -6,8 +6,8 @@ local UserInputService = cloneref(game:GetService("UserInputService"))
 local RunService = cloneref(game:GetService("RunService"))
 
 local Creator = require("../modules/Creator")
+local Motion = require("../modules/Motion")
 local New = Creator.New
-local Tween = Creator.Tween
 
 local Element = {}
 
@@ -210,6 +210,15 @@ function Element:New(Config)
 		Tooltip.Container.Position = UDim2.new(0.5, 0, 0, -8)
 	end
 
+	local function SetFillSize(Delta, Duration)
+		local Size = UDim2.new(Delta, 0, 1, 0)
+		if Duration == 0 or not Motion.ShouldAnimate(Config) then
+			Slider.UIElements.SliderIcon.Frame.Size = Size
+		else
+			Motion.Play(Slider.UIElements.SliderIcon.Frame, Duration or "Fast", { Size = Size }, nil, nil, "Fill")
+		end
+	end
+
 	function Slider:Lock()
 		Slider.Locked = true
 		CanCallback = false
@@ -257,7 +266,7 @@ function Element:New(Config)
 					Value = math.clamp(Value, Slider.Value.Min or 0, Slider.Value.Max or 100)
 
 					if Value ~= LastValue then
-						Tween(Slider.UIElements.SliderIcon.Frame, 0.05, { Size = UDim2.new(delta, 0, 1, 0) }):Play()
+						SetFillSize(delta, 0)
 						Slider.UIElements.SliderContainer.TextBox.Text = FormatValue(Value)
 						if Tooltip then
 							Tooltip.TitleFrame.Text = FormatValue(Value)
@@ -278,7 +287,7 @@ function Element:New(Config)
 						Value = CalculateValue(Slider.Value.Min + delta * (Slider.Value.Max - Slider.Value.Min))
 
 						if Value ~= LastValue then
-							Tween(Slider.UIElements.SliderIcon.Frame, 0.05, { Size = UDim2.new(delta, 0, 1, 0) }):Play()
+							SetFillSize(delta, 0)
 							Slider.UIElements.SliderContainer.TextBox.Text = FormatValue(Value)
 							if Tooltip then
 								Tooltip.TitleFrame.Text = FormatValue(Value)
@@ -305,7 +314,7 @@ function Element:New(Config)
 							Config.WindUI.CurrentInput = nil
 
 							if Config.Window.NewElements then
-								Tween(Slider.UIElements.SliderIcon.Frame.Thumb, 0.2, {
+								Motion.Play(Slider.UIElements.SliderIcon.Frame.Thumb, "Focus", {
 									ImageTransparency = 0,
 									Size = UDim2.new(
 										0,
@@ -313,7 +322,7 @@ function Element:New(Config)
 										0,
 										Config.Window.NewElements and (Slider.ThumbSize + 4) or (Slider.ThumbSize + 2)
 									),
-								}, Enum.EasingStyle.Quint, Enum.EasingDirection.InOut):Play()
+								}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Thumb")
 							end
 							if Tooltip then
 								Tooltip:Close(false)
@@ -331,7 +340,7 @@ function Element:New(Config)
 					Value = CalculateValue(Slider.Value.Min + delta * (Slider.Value.Max - Slider.Value.Min))
 
 					if Value ~= LastValue then
-						Tween(Slider.UIElements.SliderIcon.Frame, 0.05, { Size = UDim2.new(delta, 0, 1, 0) }):Play()
+						SetFillSize(delta, "Fast")
 						Slider.UIElements.SliderContainer.TextBox.Text = FormatValue(Value)
 						if Tooltip then
 							Tooltip.TitleFrame.Text = FormatValue(Value)
@@ -354,7 +363,7 @@ function Element:New(Config)
 		else
 			local newDelta =
 				math.clamp((currentValue - (Slider.Value.Min or 0)) / (newMax - (Slider.Value.Min or 0)), 0, 1)
-			Tween(Slider.UIElements.SliderIcon.Frame, 0.1, { Size = UDim2.new(newDelta, 0, 1, 0) }):Play()
+			SetFillSize(newDelta, "Fast")
 		end
 	end
 
@@ -366,7 +375,7 @@ function Element:New(Config)
 			Slider:Set(newMin)
 		else
 			local newDelta = math.clamp((currentValue - newMin) / ((Slider.Value.Max or 100) - newMin), 0, 1)
-			Tween(Slider.UIElements.SliderIcon.Frame, 0.1, { Size = UDim2.new(newDelta, 0, 1, 0) }):Play()
+			SetFillSize(newDelta, "Fast")
 		end
 	end
 
@@ -401,7 +410,7 @@ function Element:New(Config)
 
 			-- drag slider
 			if Config.Window.NewElements then
-				Tween(Slider.UIElements.SliderIcon.Frame.Thumb, 0.24, {
+				Motion.Play(Slider.UIElements.SliderIcon.Frame.Thumb, "Focus", {
 					ImageTransparency = 0.85,
 					Size = UDim2.new(
 						0,
@@ -409,7 +418,7 @@ function Element:New(Config)
 						0,
 						Slider.ThumbSize + 8
 					),
-				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Thumb")
 			end
 			if Tooltip then
 				Tooltip:Open()

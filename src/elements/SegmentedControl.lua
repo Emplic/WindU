@@ -1,6 +1,6 @@
 local Creator = require("../modules/Creator")
+local Motion = require("../modules/Motion")
 local New = Creator.New
-local Tween = Creator.Tween
 
 local Utils = require("./ModernControlUtils")
 
@@ -22,6 +22,7 @@ function Element:New(Config)
 		Callback = Config.Callback or function() end,
 		UIElements = {},
 		Segments = {},
+		Animation = Config.Animation ~= false,
 
 		Width = GetControlWidth(Config),
 	}
@@ -74,9 +75,9 @@ function Element:New(Config)
 			local BackgroundTransparency = Selected and 0.82 or 1
 			local TextTransparency = Segment.Option.Disabled and 0.55 or (Selected and 0 or 0.25)
 
-			if IsAnimated then
-				Tween(Segment.Button, 0.12, { ImageTransparency = BackgroundTransparency }):Play()
-				Tween(Segment.Title, 0.12, { TextTransparency = TextTransparency }):Play()
+			if IsAnimated and SegmentedControl.Animation then
+				Motion.Play(Segment.Button, "Select", { ImageTransparency = BackgroundTransparency }, nil, nil, "Select")
+				Motion.Play(Segment.Title, "Select", { TextTransparency = TextTransparency }, nil, nil, "Select")
 			else
 				Segment.Button.ImageTransparency = BackgroundTransparency
 				Segment.Title.TextTransparency = TextTransparency
@@ -124,6 +125,13 @@ function Element:New(Config)
 			Option = Option,
 		}
 		SegmentedControl.Segments[Index] = Segment
+
+		Motion.AttachPress(Button, Creator, {
+			Amount = 0.96,
+			Enabled = function()
+				return SegmentedControl.Animation and not SegmentedControl.Locked and not Option.Disabled
+			end,
+		})
 
 		Creator.AddSignal(Button.MouseButton1Click, function()
 			if not Option.Disabled then

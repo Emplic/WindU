@@ -2,6 +2,7 @@ local WindUI = {
 	Window = nil,
 	Theme = nil,
 	Creator = require("./modules/Creator"),
+	Motion = require("./modules/Motion"),
 	LocalizationModule = require("./modules/Localization"),
 	NotificationModule = require("./components/Notification"),
 	Themes = nil,
@@ -185,6 +186,14 @@ function WindUI:SetFont(FontId)
 	Creator.UpdateFont(FontId)
 end
 
+function WindUI:SetMotionPreset(Preset)
+	return WindUI.Motion:SetPreset(Preset)
+end
+
+function WindUI:SetReducedMotion(Value)
+	return WindUI.Motion:SetReducedMotion(Value)
+end
+
 function WindUI:OnThemeChange(func)
 	WindUI.OnThemeChangeFunction = func
 end
@@ -324,6 +333,8 @@ function WindUI:CreateWindow(Config)
 		warn("You cannot create more than one window")
 		return
 	end
+
+	WindUI.Motion:Configure(Config.Motion)
 
 	local CanLoadWindow = true
 
