@@ -72,6 +72,19 @@ return function(Creator)
 		StepperIcon = "Icon",
 		StepperText = "Text",
 
+		BadgeBackground = "Primary",
+		BadgeText = "White",
+		BadgeIcon = "White",
+
+		KeyValueIcon = "Icon",
+		ChipListBackground = "ElementBackground",
+		TimelineLine = "Text",
+		AccordionBackground = "ElementBackground",
+		AccordionIcon = "Icon",
+		TabBoxTabBackground = "ElementBackground",
+		TabBoxIcon = "Icon",
+		EmptyStateIcon = "Icon",
+
 		PopupBackground = "Background",
 		PopupBackgroundTransparency = "BackgroundTransparency",
 		PopupTitle = "Text",

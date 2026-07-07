@@ -38,7 +38,11 @@ return function(Config)
 		Folder = Config.Folder,
 		Resizable = Config.Resizable ~= false,
 		Background = Config.Background,
+		BackgroundColor = Config.BackgroundColor,
+		BackgroundGradient = Config.BackgroundGradient,
 		BackgroundImageTransparency = Config.BackgroundImageTransparency or 0,
+		BackgroundOverlayTransparency = Config.BackgroundOverlayTransparency or 0.62,
+		BackgroundScaleType = Config.BackgroundScaleType or "Crop",
 		ShadowTransparency = Config.ShadowTransparency or 0.6,
 		User = Config.User or {},
 		Footer = Config.Footer or {},
@@ -582,6 +586,7 @@ return function(Config)
 			Video = BGVideo,
 			Looped = true,
 			Volume = 0,
+			ZIndex = -10,
 		}, {
 			New("UICorner", {
 				CornerRadius = UDim.new(0, Window.UICorner),
@@ -624,7 +629,8 @@ return function(Config)
 			Size = UDim2.new(1, 0, 1, 0),
 			Image = customAsset,
 			ImageTransparency = 0,
-			ScaleType = "Crop",
+			ScaleType = Window.BackgroundScaleType,
+			ZIndex = -10,
 		}, {
 			New("UICorner", {
 				CornerRadius = UDim.new(0, Window.UICorner),
@@ -636,7 +642,8 @@ return function(Config)
 			Size = UDim2.new(1, 0, 1, 0),
 			Image = BGRobloxImage,
 			ImageTransparency = 0,
-			ScaleType = "Crop",
+			ScaleType = Window.BackgroundScaleType,
+			ZIndex = -10,
 		}, {
 			New("UICorner", {
 				CornerRadius = UDim.new(0, Window.UICorner),
@@ -648,7 +655,8 @@ return function(Config)
 			Size = UDim2.new(1, 0, 1, 0),
 			Image = typeof(Window.Background) == "string" and Window.Background or "",
 			ImageTransparency = 1,
-			ScaleType = "Crop",
+			ScaleType = Window.BackgroundScaleType,
+			ZIndex = -10,
 		}, {
 			New("UICorner", {
 				CornerRadius = UDim.new(0, Window.UICorner),
@@ -1085,19 +1093,122 @@ return function(Config)
 		end
 	)
 
-	if not IsVideoBG and Window.Background and typeof(Window.Background) == "table" then
+	local function ParseBackgroundColor(Value)
+		if typeof(Value) == "Color3" then
+			return Value
+		end
+		if typeof(Value) == "string" and string.sub(Value, 1, 1) == "#" then
+			local Success, Color = pcall(function()
+				return Color3.fromHex(Value)
+			end)
+			return Success and Color or nil
+		end
+		return nil
+	end
+
+	local function ApplyBackgroundColor(Value)
+		local Color = ParseBackgroundColor(Value)
+		if Color then
+			Window.BackgroundColor = Value
+			Motion.Play(
+				Window.UIElements.Main.Background,
+				"Background",
+				{ ImageColor3 = Color },
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.Out,
+				"BackgroundColor"
+			)
+		end
+		return Color
+	end
+
+	local function SetBackgroundGradientObject(Gradient, Transparency)
+		if Window.UIElements.BackgroundGradient then
+			Window.UIElements.BackgroundGradient:Destroy()
+			Window.UIElements.BackgroundGradient = nil
+		end
+
+		if typeof(Gradient) ~= "table" then
+			return nil
+		end
+
 		local BackgroundGradient = New("UIGradient")
-		for key, value in next, Window.Background do
+		for key, value in next, Gradient do
 			BackgroundGradient[key] = value
 		end
 
-		Window.UIElements.BackgroundGradient = Creator.NewRoundFrame(Window.UICorner, "Squircle", {
+		local GradientFrame = Creator.NewRoundFrame(Window.UICorner, "Squircle", {
+			Name = "BackgroundGradient",
 			Size = UDim2.new(1, 0, 1, 0),
 			Parent = Window.UIElements.Main.Background,
-			ImageTransparency = Window.Transparent and Config.WindUI.TransparencyValue or 0,
+			ImageTransparency = Transparency or Window.BackgroundOverlayTransparency,
+			ZIndex = -9,
 		}, {
 			BackgroundGradient,
 		})
+
+		Window.UIElements.BackgroundGradient = GradientFrame
+		return GradientFrame
+	end
+
+	local function CreateImageBackground()
+		if BGImage and BGImage:IsA("ImageLabel") then
+			return BGImage
+		end
+
+		if BGImage then
+			BGImage:Destroy()
+		end
+
+		BGImage = New("ImageLabel", {
+			Name = "BackgroundImage",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0),
+			ImageTransparency = 1,
+			ScaleType = Window.BackgroundScaleType,
+			ZIndex = -10,
+			Parent = Window.UIElements.Main.Background,
+		}, {
+			New("UICorner", {
+				CornerRadius = UDim.new(0, Window.UICorner),
+			}),
+		})
+
+		return BGImage
+	end
+
+	local function CreateVideoBackground()
+		if BGImage then
+			BGImage:Destroy()
+		end
+
+		BGImage = New("VideoFrame", {
+			Name = "BackgroundVideo",
+			BackgroundTransparency = 1,
+			Size = UDim2.new(1, 0, 1, 0),
+			Looped = true,
+			Volume = 0,
+			ZIndex = -10,
+			Parent = Window.UIElements.Main.Background,
+		}, {
+			New("UICorner", {
+				CornerRadius = UDim.new(0, Window.UICorner),
+			}),
+		})
+
+		return BGImage
+	end
+
+	if Window.BackgroundColor then
+		ApplyBackgroundColor(Window.BackgroundColor)
+	end
+
+	local InitialGradient = Window.BackgroundGradient
+		or (not IsVideoBG and Window.Background and typeof(Window.Background) == "table" and Window.Background)
+	if InitialGradient then
+		local InitialTransparency = Window.BackgroundGradient and Window.BackgroundOverlayTransparency
+			or (Window.Transparent and Config.WindUI.TransparencyValue or 0)
+		SetBackgroundGradientObject(InitialGradient, InitialTransparency)
 	end
 
 	-- local blur = require("../Blur")
@@ -1182,14 +1293,112 @@ return function(Config)
 		end
 	end
 
-	function Window:SetBackgroundImage(id)
-		Window.UIElements.Main.Background.ImageLabel.Image = id
-	end
-	function Window:SetBackgroundImageTransparency(v)
-		if BGImage and BGImage:IsA("ImageLabel") then
-			BGImage.ImageTransparency = math.floor(v * 10 + 0.5) / 10
+	local function GetBackgroundTransparency(Value, Default)
+		local Number = tonumber(Value)
+		if Number == nil then
+			return Default
 		end
-		Window.BackgroundImageTransparency = math.floor(v * 10 + 0.5) / 10
+		return math.clamp(math.floor(Number * 100 + 0.5) / 100, 0, 1)
+	end
+
+	function Window:SetBackgroundImage(id, Options)
+		Options = typeof(Options) == "table" and Options or { Transparency = Options }
+		local Image = CreateImageBackground()
+		Window.Background = id
+		Window.BackgroundScaleType = Options.ScaleType or Window.BackgroundScaleType
+		Window.BackgroundImageTransparency = GetBackgroundTransparency(
+			Options.Transparency,
+			Window.BackgroundImageTransparency
+		)
+		Image.ScaleType = Window.BackgroundScaleType
+		Image.Image = tostring(id or "")
+		Image.ImageTransparency = 1
+		Motion.Play(
+			Image,
+			"Background",
+			{ ImageTransparency = Window.BackgroundImageTransparency },
+			Enum.EasingStyle.Quint,
+			Enum.EasingDirection.Out,
+			"BackgroundImage"
+		)
+		return Image
+	end
+
+	function Window:SetBackgroundVideo(id, Options)
+		Options = typeof(Options) == "table" and Options or {}
+		local Video = CreateVideoBackground()
+		Window.Background = "video:" .. tostring(id or "")
+		Video.Video = tostring(id or "")
+		Video.Visible = true
+		if Options.Volume then
+			Video.Volume = math.clamp(tonumber(Options.Volume) or 0, 0, 1)
+		end
+		Video:Play()
+		return Video
+	end
+
+	function Window:SetBackgroundGradient(Gradient, Transparency)
+		Window.BackgroundGradient = Gradient
+		Window.BackgroundOverlayTransparency = GetBackgroundTransparency(Transparency, Window.BackgroundOverlayTransparency)
+		local GradientFrame = SetBackgroundGradientObject(Gradient, 1)
+		if GradientFrame then
+			Motion.Play(
+				GradientFrame,
+				"Background",
+				{ ImageTransparency = Window.BackgroundOverlayTransparency },
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.Out,
+				"BackgroundGradient"
+			)
+		end
+		return GradientFrame
+	end
+
+	function Window:SetBackgroundColor(Color)
+		return ApplyBackgroundColor(Color)
+	end
+
+	function Window:SetBackgroundOverlayTransparency(Value)
+		Window.BackgroundOverlayTransparency = GetBackgroundTransparency(Value, Window.BackgroundOverlayTransparency)
+		if Window.UIElements.BackgroundGradient then
+			Motion.Play(
+				Window.UIElements.BackgroundGradient,
+				"Background",
+				{ ImageTransparency = Window.BackgroundOverlayTransparency },
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.Out,
+				"BackgroundGradient"
+			)
+		end
+		return Window.BackgroundOverlayTransparency
+	end
+
+	function Window:SetBackground(Value, Options)
+		if typeof(Value) == "table" then
+			local Transparency = typeof(Options) == "table" and Options.Transparency or Options
+			return Window:SetBackgroundGradient(Value, Transparency)
+		end
+		if ParseBackgroundColor(Value) then
+			return Window:SetBackgroundColor(Value)
+		end
+		if typeof(Value) == "string" and string.match(Value, "^video:(.+)") then
+			return Window:SetBackgroundVideo(string.match(Value, "^video:(.+)"), Options)
+		end
+		return Window:SetBackgroundImage(Value, Options)
+	end
+
+	function Window:SetBackgroundImageTransparency(v)
+		Window.BackgroundImageTransparency = GetBackgroundTransparency(v, Window.BackgroundImageTransparency)
+		if BGImage and BGImage:IsA("ImageLabel") then
+			Motion.Play(
+				BGImage,
+				"Background",
+				{ ImageTransparency = Window.BackgroundImageTransparency },
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.Out,
+				"BackgroundImage"
+			)
+		end
 	end
 
 	function Window:SetBackgroundTransparency(v)
@@ -1338,7 +1547,7 @@ return function(Config)
 
 			if Window.UIElements.BackgroundGradient then
 				Motion.Play(Window.UIElements.BackgroundGradient, "Focus", {
-					ImageTransparency = 0,
+					ImageTransparency = Window.BackgroundGradient and Window.BackgroundOverlayTransparency or 0,
 				}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Window")
 			end
 
@@ -1552,6 +1761,10 @@ return function(Config)
 		Config.WindUI.Transparent = Value
 
 		Window.UIElements.Main.Background.ImageTransparency = Value and Config.WindUI.TransparencyValue or 0
+		if Window.UIElements.BackgroundGradient then
+			Window.UIElements.BackgroundGradient.ImageTransparency = Value and Config.WindUI.TransparencyValue
+				or Window.BackgroundOverlayTransparency
+		end
 		-- Window.UIElements.Main.Background.ImageLabel.ImageTransparency = Value and Config.WindUI.TransparencyValue or 0
 		--Window.UIElements.MainBar.Background.ImageTransparency = Value and 0.97 or 0.95
 	end

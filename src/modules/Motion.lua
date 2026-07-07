@@ -20,6 +20,10 @@ Motion.Durations = {
 	WindowClose = 0.2,
 	Resize = 0.22,
 	Highlight = 0.28,
+	Background = 0.22,
+	Expand = 0.2,
+	Switch = 0.16,
+	Reveal = 0.18,
 }
 
 local ActiveTweens = setmetatable({}, { __mode = "k" })

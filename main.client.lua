@@ -82,6 +82,15 @@ local Window = WindUI:CreateWindow({
 		Preset = "Subtle",
 		Reduced = false,
 	},
+	BackgroundColor = Color3.fromHex("#0B0F14"),
+	BackgroundGradient = WindUI:Gradient({
+		["0"] = { Color = Color3.fromHex("#0B0F14"), Transparency = 0.08 },
+		["48"] = { Color = Color3.fromHex("#17243A"), Transparency = 0.36 },
+		["100"] = { Color = Color3.fromHex("#101827"), Transparency = 0.58 },
+	}, {
+		Rotation = 35,
+	}),
+	BackgroundOverlayTransparency = 0.48,
 	--Size = UDim2.fromOffset(700,700),
 
 	HideSearchBar = false,
@@ -218,6 +227,180 @@ do
 		Value = "WindUI modern controls",
 		Callback = function(Value)
 			print("TextArea:", Value)
+		end,
+	})
+end
+
+-- */  Advanced Elements  /* --
+do
+	local AdvancedTab = Window:Tab({
+		Title = "Advanced Elements",
+		Desc = "Display, status, layout, and nested tab components",
+		Icon = "layout-grid",
+		IconColor = Purple,
+		Border = true,
+	})
+
+	AdvancedTab:Badge({
+		Title = "Release Channel",
+		Desc = "Compact status pill",
+		Value = "Beta",
+		Variant = "Info",
+		Icon = "sparkles",
+	})
+
+	AdvancedTab:StatusCard({
+		Title = "System Status",
+		Desc = "Animated dot and label",
+		Status = "Success",
+		Value = "Online",
+	})
+
+	AdvancedTab:StatCard({
+		Title = "Session Stats",
+		Desc = "Large metric with trend",
+		Icon = "activity",
+		Value = "128ms",
+		SubValue = "Latency stable",
+		Trend = "Up",
+	})
+
+	AdvancedTab:KeyValue({
+		Title = "Runtime Details",
+		Desc = "Readable metadata rows",
+		Items = {
+			{ Title = "Executor", Value = "Mobile-ready", Icon = "smartphone" },
+			{ Title = "Motion", Value = "Subtle", Icon = "wand-sparkles" },
+			{ Title = "Background", Value = "Gradient overlay", Icon = "image" },
+		},
+	})
+
+	AdvancedTab:ChipList({
+		Title = "Quick Filters",
+		Desc = "Multi-select chip group",
+		Options = {
+			{ Title = "Visual", Value = "visual" },
+			{ Title = "Combat", Value = "combat" },
+			{ Title = "Utility", Value = "utility" },
+		},
+		Value = { "visual", "utility" },
+		Callback = function(Values)
+			print("ChipList:", table.concat(Values, ", "))
+		end,
+	})
+
+	AdvancedTab:Timeline({
+		Title = "Load Timeline",
+		Desc = "Sequential event list",
+		Items = {
+			{ Title = "Core loaded", Desc = "Window and theme initialized", Value = "Success" },
+			{ Title = "Motion attached", Desc = "Press, reveal, switch, and background tweens are active", Value = "Info" },
+			{ Title = "Elements ready", Desc = "New display elements are available", Value = "Success" },
+		},
+	})
+
+	AdvancedTab:Accordion({
+		Title = "Expandable Notes",
+		Desc = "Animated open and close rows",
+		OpenIndex = 1,
+		Items = {
+			{ Title = "Animation", Desc = "Uses the shared Motion module for short, consistent transitions." },
+			{ Title = "Compatibility", Desc = "New elements are additive and do not replace old controls." },
+			{ Title = "Mobile", Desc = "Controls stay compact and avoid keyboard-heavy workflows." },
+		},
+	})
+
+	AdvancedTab:EmptyState({
+		Title = "No queued alerts",
+		Desc = "EmptyState is useful for clear placeholders inside dashboards.",
+		Icon = "inbox",
+		Buttons = {
+			{
+				Title = "Notify",
+				Icon = "bell",
+				Variant = "Primary",
+				Callback = function()
+					WindUI:Notify({
+						Title = "Advanced Elements",
+						Content = "EmptyState action clicked.",
+					})
+				end,
+			},
+		},
+	})
+
+	local SectionBox = AdvancedTab:Section({
+		Title = "Section Box Tabs",
+		Desc = "TabBox can live inside Section(Box=true)",
+		Icon = "folder-kanban",
+		Box = true,
+		BoxBorder = true,
+		Opened = true,
+	})
+
+	local BoxTabs = SectionBox:TabBox({
+		Title = "Multi Tab Box",
+		Desc = "Nested pages with normal element APIs",
+	})
+
+	local OverviewPage = BoxTabs:Tab({
+		Title = "Overview",
+		Icon = "sparkles",
+	})
+	OverviewPage:Badge({
+		Title = "Nested Badge",
+		Value = "Ready",
+		Variant = "Success",
+		Icon = "circle-check",
+	})
+	OverviewPage:Button({
+		Title = "Highlight section",
+		Icon = "scan",
+		Callback = function()
+			SectionBox:Highlight()
+		end,
+	})
+
+	local SettingsPage = BoxTabs:Tab({
+		Title = "Settings",
+		Icon = "sliders-horizontal",
+	})
+	SettingsPage:Toggle({
+		Title = "Background overlay",
+		Value = true,
+		Callback = function(Value)
+			Window:SetBackgroundOverlayTransparency(Value and 0.48 or 0.74)
+		end,
+	})
+	SettingsPage:ChipList({
+		Title = "Modes",
+		Options = { "Subtle", "Dense", "Clean" },
+		Value = { "Subtle" },
+	})
+
+	local LogsPage = BoxTabs:Tab({
+		Title = "Logs",
+		Icon = "history",
+	})
+	LogsPage:Timeline({
+		Title = "Nested Timeline",
+		Items = {
+			{ Title = "TabBox mounted", Value = "Success" },
+			{ Title = "Page switched", Value = "Info" },
+		},
+	})
+
+	AdvancedTab:Button({
+		Title = "Cycle background",
+		Icon = "image",
+		Callback = function()
+			Window:SetBackgroundGradient(WindUI:Gradient({
+				["0"] = { Color = Color3.fromHex("#07111F"), Transparency = 0.08 },
+				["45"] = { Color = Color3.fromHex("#102D3D"), Transparency = 0.32 },
+				["100"] = { Color = Color3.fromHex("#1B1231"), Transparency = 0.56 },
+			}, {
+				Rotation = 115,
+			}), 0.44)
 		end,
 	})
 end

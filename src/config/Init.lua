@@ -143,6 +143,19 @@ ConfigManager = {
                 end
             end
         },
+        ChipList = {
+            Save = function(obj)
+                return {
+                    __type = obj.__type,
+                    value = obj.Get and obj:Get() or obj.Values,
+                }
+            end,
+            Load = function(element, data)
+                if element and element.Set then
+                    element:Set(data.value, false)
+                end
+            end
+        },
         Toggle = {
             Save = function(obj)
                 return {
