@@ -10,6 +10,7 @@ local Mouse = Players.LocalPlayer:GetMouse()
 local Creator = require("../../modules/Creator")
 local Motion = require("../../modules/Motion")
 local New = Creator.New
+local GoldenEffect = require("./GoldenEffect")
 
 local CreateToolTip = require("../ui/Tooltip").New
 local CreateScrollSlider = require("../ui/ScrollSlider").New
@@ -29,6 +30,18 @@ local TabModule = {
 	OnChangeFunc = function(v) end,
 }
 
+local function GetImageTarget(Object)
+	if typeof(Object) ~= "Instance" then
+		return nil
+	end
+
+	if Object:IsA("ImageLabel") or Object:IsA("ImageButton") then
+		return Object
+	end
+
+	return Object:FindFirstChildWhichIsA("ImageLabel", true) or Object:FindFirstChildWhichIsA("ImageButton", true)
+end
+
 function TabModule.Init(WindowTable, WindUITable, ToolTipParent, TabHighlight)
 	Window = WindowTable
 	WindUI = WindUITable
@@ -43,7 +56,10 @@ function TabModule.New(Config, UIScale)
 		Title = Config.Title or "Tab",
 		Desc = Config.Desc,
 		Icon = Config.Icon,
-		IconColor = Config.IconColor,
+		Golden = Config.Golden == true or Config.Premium == true,
+		Premium = Config.Premium == true or Config.Golden == true,
+		IconColor = Config.IconColor
+			or ((Config.Golden == true or Config.Premium == true) and Color3.fromRGB(255, 222, 105) or nil),
 		IconShape = Config.IconShape,
 		IconThemed = Config.IconThemed,
 		Locked = Config.Locked,
@@ -138,10 +154,11 @@ function TabModule.New(Config, UIScale)
 			}),
 			New("TextLabel", {
 				Text = Tab.Title,
-				ThemeTag = {
+				ThemeTag = not Tab.Golden and {
 					TextColor3 = "TabTitle",
-				},
-				TextTransparency = not Tab.Locked and 0.4 or 0.7,
+				} or nil,
+				TextColor3 = Tab.Golden and Color3.fromRGB(255, 232, 144) or nil,
+				TextTransparency = not Tab.Locked and (Tab.Golden and 0.12 or 0.4) or 0.7,
 				TextSize = 15,
 				Size = UDim2.new(1, 0, 0, 0),
 				FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
@@ -168,6 +185,17 @@ function TabModule.New(Config, UIScale)
 		}),
 	}, true)
 
+	if Tab.Golden then
+		Tab.UIElements.GoldenEffect = GoldenEffect.Apply(Tab.UIElements.Main, {
+			Corner = Tab.UICorner,
+			Compact = true,
+			FillTransparency = 0.86,
+			OutlineTransparency = 0.2,
+			SheenTransparency = 0.86,
+			SparklePause = 1.45,
+		})
+	end
+
 	local TextOffset = 0
 	local Icon
 	local Icon2
@@ -184,13 +212,16 @@ function TabModule.New(Config, UIScale)
 			"TabIcon"
 		)
 		Icon.Size = UDim2.new(0, 16, 0, 16)
-		if Tab.IconColor then
-			Icon.ImageLabel.ImageColor3 = Tab.IconColor
+		local IconTarget = GetImageTarget(Icon)
+		if Tab.IconColor and IconTarget then
+			IconTarget.ImageColor3 = Tab.IconColor
 		end
 		if not Tab.IconShape then
 			Icon.Parent = Tab.UIElements.Main.Frame
 			Tab.UIElements.Icon = Icon
-			Icon.ImageLabel.ImageTransparency = not Tab.Locked and 0 or 0.7
+			if IconTarget then
+				IconTarget.ImageTransparency = not Tab.Locked and 0 or 0.7
+			end
 			TextOffset = -16 - 2 - (Window.UIPadding / 2)
 			Tab.UIElements.Main.Frame.TextLabel.Size = UDim2.new(1, TextOffset, 0, 0)
 		elseif Tab.IconColor then
@@ -235,8 +266,10 @@ function TabModule.New(Config, UIScale)
 			)
 			Icon.AnchorPoint = Vector2.new(0.5, 0.5)
 			Icon.Position = UDim2.new(0.5, 0, 0.5, 0)
-			Icon.ImageLabel.ImageTransparency = 0
-			Icon.ImageLabel.ImageColor3 = Creator.GetTextColorForHSB(Tab.IconColor, 0.68)
+			if IconTarget then
+				IconTarget.ImageTransparency = 0
+				IconTarget.ImageColor3 = Creator.GetTextColorForHSB(Tab.IconColor, 0.68)
+			end
 			TextOffset = -26 - 2 - (Window.UIPadding / 2)
 			Tab.UIElements.Main.Frame.TextLabel.Size = UDim2.new(1, TextOffset, 0, 0)
 		end
@@ -244,7 +277,10 @@ function TabModule.New(Config, UIScale)
 		Icon2 =
 			Creator.Image(Tab.Icon, Tab.Icon .. ":" .. Tab.Title, 0, Window.Folder, Tab.__type, true, Tab.IconThemed)
 		Icon2.Size = UDim2.new(0, 16, 0, 16)
-		Icon2.ImageLabel.ImageTransparency = not Tab.Locked and 0 or 0.7
+		local Icon2Target = GetImageTarget(Icon2)
+		if Icon2Target then
+			Icon2Target.ImageTransparency = not Tab.Locked and 0 or 0.7
+		end
 		TextOffset = -30
 
 		--Icon2.Parent = Tab.UIElements.Main.Frame
@@ -583,6 +619,27 @@ function TabModule:OnChange(func)
 	TabModule.OnChangeFunc = func
 end
 
+local function ApplyGoldenTabVisual(TabObject, Active)
+	if not TabObject or not TabObject.Golden then
+		return
+	end
+
+	local Label = TabObject.UIElements
+		and TabObject.UIElements.Main
+		and TabObject.UIElements.Main.Frame
+		and TabObject.UIElements.Main.Frame.TextLabel
+	if Label then
+		Label.TextColor3 = Active and Color3.fromRGB(255, 244, 184) or Color3.fromRGB(255, 224, 120)
+		Label.TextTransparency = Active and 0 or 0.12
+	end
+
+	local IconTarget = TabObject.UIElements and TabObject.UIElements.Icon and GetImageTarget(TabObject.UIElements.Icon)
+	if IconTarget then
+		IconTarget.ImageColor3 = TabObject.IconColor or Color3.fromRGB(255, 222, 105)
+		IconTarget.ImageTransparency = Active and 0 or 0.08
+	end
+end
+
 function TabModule:SelectTab(TabIndex)
 	if not TabModule.Tabs[TabIndex].Locked then
 		TabModule.SelectedTab = TabIndex
@@ -600,12 +657,14 @@ function TabModule:SelectTab(TabIndex)
 				Creator.SetThemeTag(TabObject.UIElements.Main.Frame.TextLabel, {
 					TextTransparency = "TabTextTransparency",
 				}, 0.15)
-				if TabObject.UIElements.Icon and not TabObject.IconColor then
-					Creator.SetThemeTag(TabObject.UIElements.Icon.ImageLabel, {
+				local IconTarget = TabObject.UIElements.Icon and GetImageTarget(TabObject.UIElements.Icon)
+				if IconTarget and not TabObject.IconColor then
+					Creator.SetThemeTag(IconTarget, {
 						ImageTransparency = "TabIconTransparency",
 					}, 0.15)
 				end
 				TabObject.Selected = false
+				ApplyGoldenTabVisual(TabObject, false)
 			end
 		end
 		Creator.SetThemeTag(TabModule.Tabs[TabIndex].UIElements.Main, {
@@ -620,12 +679,15 @@ function TabModule:SelectTab(TabIndex)
 		Creator.SetThemeTag(TabModule.Tabs[TabIndex].UIElements.Main.Frame.TextLabel, {
 			TextTransparency = "TabTextTransparencyActive",
 		}, 0.15)
-		if TabModule.Tabs[TabIndex].UIElements.Icon and not TabModule.Tabs[TabIndex].IconColor then
-			Creator.SetThemeTag(TabModule.Tabs[TabIndex].UIElements.Icon.ImageLabel, {
+		local SelectedIconTarget = TabModule.Tabs[TabIndex].UIElements.Icon
+			and GetImageTarget(TabModule.Tabs[TabIndex].UIElements.Icon)
+		if SelectedIconTarget and not TabModule.Tabs[TabIndex].IconColor then
+			Creator.SetThemeTag(SelectedIconTarget, {
 				ImageTransparency = "TabIconTransparencyActive",
 			}, 0.15)
 		end
 		TabModule.Tabs[TabIndex].Selected = true
+		ApplyGoldenTabVisual(TabModule.Tabs[TabIndex], true)
 
 		task.spawn(function()
 			for _, ContainerObject in next, TabModule.Containers do

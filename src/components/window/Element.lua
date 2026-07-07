@@ -3,6 +3,7 @@ local Creator = require("../../modules/Creator")
 local Motion = require("../../modules/Motion")
 local New = Creator.New
 local NewRoundFrame = Creator.NewRoundFrame
+local GoldenEffect = require("./GoldenEffect")
 
 local cloneref = (cloneref or clonereference or function(instance)
 	return instance
@@ -102,6 +103,9 @@ return function(Config)
 			Config.ParentConfig and Config.ParentConfig.GlassLiquid,
 			Config.Window.ElementConfig.LiquidGlass
 		),
+		Golden = Config.Golden == true
+			or Config.Premium == true
+			or (Config.ParentConfig and (Config.ParentConfig.Golden == true or Config.ParentConfig.Premium == true)),
 		CornerStyle = Coalesce(
 			Config.CornerStyle,
 			Config.ParentConfig and Config.ParentConfig.CornerStyle,
@@ -599,6 +603,20 @@ return function(Config)
 	Element.UIElements.Main = Main
 	Element.UIElements.Locked = Locked
 	ApplyNativeCorners(CurrentCorners)
+
+	if Element.Golden then
+		Element.UIElements.GoldenEffect = GoldenEffect.Apply(Main, {
+			Corner = Element.UICorner,
+			Compact = Element.Size == "Small",
+			FillTransparency = 0.8,
+			OutlineTransparency = 0.18,
+			SheenTransparency = 0.82,
+		})
+
+		Title.TextColor3 = Color3.fromRGB(255, 232, 144)
+		Desc.TextColor3 = Color3.fromRGB(255, 224, 138)
+		Desc.TextTransparency = math.min(Desc.TextTransparency + 0.08, 0.72)
+	end
 
 	if Element.Hover then
 		Creator.AddSignal(Main.MouseMoved, function(x, y)

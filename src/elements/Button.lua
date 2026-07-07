@@ -3,6 +3,18 @@ local New = Creator.New
 
 local Element = {}
 
+local function GetImageTarget(Object)
+	if typeof(Object) ~= "Instance" then
+		return nil
+	end
+
+	if Object:IsA("ImageLabel") or Object:IsA("ImageButton") then
+		return Object
+	end
+
+	return Object:FindFirstChildWhichIsA("ImageLabel", true) or Object:FindFirstChildWhichIsA("ImageButton", true)
+end
+
 function Element:New(Config)
 	local Button = {
 		__type = "Button",
@@ -16,6 +28,8 @@ function Element:New(Config)
 		IconAlign = Config.IconAlign or "Right",
 		Locked = Config.Locked or false,
 		LockedTitle = Config.LockedTitle,
+		Golden = Config.Golden == true or Config.Premium == true,
+		Premium = Config.Premium == true or Config.Golden == true,
 		Callback = Config.Callback or function() end,
 		UIElements = {},
 	}
@@ -42,6 +56,8 @@ function Element:New(Config)
 		ParentConfig = Config,
 		Size = Config.Size,
 		Tags = Config.Tags,
+		Golden = Button.Golden,
+		Premium = Button.Premium,
 	})
 
 	-- Button.UIElements.ButtonIcon = New("ImageLabel",{
@@ -67,10 +83,6 @@ function Element:New(Config)
 		Button.IconThemed
 	)
 
-	if Button.IconColor then
-		Button.UIElements.ButtonIcon.ImageLabel.ImageColor3 = Button.IconColor
-	end
-
 	Button.UIElements.ButtonIcon.Size = UDim2.new(0, 20, 0, 20)
 	Button.UIElements.ButtonIcon.Parent = Button.Justify == "Between" and Button.ButtonFrame.UIElements.Main
 		or Button.ButtonFrame.UIElements.Container.TitleFrame
@@ -78,7 +90,15 @@ function Element:New(Config)
 	Button.UIElements.ButtonIcon.AnchorPoint = Vector2.new(1, 0.5)
 	Button.UIElements.ButtonIcon.Position = UDim2.new(1, 0, 0.5, 0)
 
-	Button.ButtonFrame:Colorize(Button.UIElements.ButtonIcon.ImageLabel, "ImageColor3")
+	local ButtonIconTarget = GetImageTarget(Button.UIElements.ButtonIcon)
+	if ButtonIconTarget then
+		if Button.IconColor then
+			ButtonIconTarget.ImageColor3 = Button.IconColor
+		elseif Button.Golden then
+			ButtonIconTarget.ImageColor3 = Color3.fromRGB(255, 222, 105)
+		end
+		Button.ButtonFrame:Colorize(ButtonIconTarget, "ImageColor3")
+	end
 
 	function Button:Lock()
 		Button.Locked = true

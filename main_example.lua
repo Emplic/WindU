@@ -15,6 +15,8 @@ local Window = WindUI:CreateWindow({
 		DefaultKey = "RightShift",
 		QuickKeys = { "RightShift", "F", "LeftControl" },
 		ScrimTransparency = 0.8,
+		Compact = true,
+		UseWindowBackground = true,
 	},
 	Watermark = {
 		Title = "WindUI",
@@ -196,6 +198,57 @@ SettingsTab:Slider({
 	Callback = function(Value)
 		Window:SetElementTransparency(Value)
 	end,
+})
+
+local PremiumTab = Window:Tab({
+	Title = "Premium",
+	Icon = "crown",
+	Golden = true,
+	Desc = "Golden tab and button effects",
+})
+
+PremiumTab:Callout({
+	Title = "Golden Components",
+	Desc = "Use Golden = true or Premium = true on tabs and buttons.",
+	Variant = "Info",
+	Icon = "sparkles",
+})
+
+PremiumTab:Button({
+	Title = "Golden Action",
+	Desc = "Premium button with sheen and sparkle animation.",
+	Icon = "sparkles",
+	Golden = true,
+	Callback = function()
+		WindUI:Notify({
+			Title = "Premium",
+			Content = "Golden button callback fired.",
+			Icon = "crown",
+		})
+	end,
+})
+
+local PremiumRow = PremiumTab:HStack({
+	MinChildWidth = 150,
+})
+PremiumRow:Button({
+	Title = "Reward",
+	Icon = "gem",
+	Premium = true,
+})
+PremiumRow:Button({
+	Title = "Boost",
+	Icon = "zap",
+	Golden = true,
+})
+
+PremiumTab:KeyValue({
+	Title = "Premium API",
+	Items = {
+		{ Title = "Tab", Value = "Golden = true" },
+		{ Title = "Button", Value = "Premium = true" },
+		{ Title = "Motion", Value = "Sheen + sparkle" },
+	},
 })
 
 local LinkedTab = Window:Tab({

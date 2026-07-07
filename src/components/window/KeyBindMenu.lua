@@ -33,14 +33,20 @@ end
 
 function KeyBindMenu.New(Window, WindUI, Config)
 	local MenuConfig = typeof(Window.KeyBindMenu) == "table" and Window.KeyBindMenu or {}
-	local RootWidth = MenuConfig.Width or 326
-	local RootHeight = MenuConfig.Height or 230
+	local IsMobile = (UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled) or Window.IsPC == false
+	local Compact = MenuConfig.Compact == true or (MenuConfig.Compact ~= false and IsMobile)
+	local RootWidth = MenuConfig.Width or (Compact and 286 or 326)
+	local RootHeight = MenuConfig.Height or (Compact and 202 or 230)
+	local ContentPadding = Compact and 10 or 14
+	local ContentGap = Compact and 9 or 12
 	local QuickKeys = MenuConfig.QuickKeys or { "RightShift", "F", "LeftControl" }
 	local Menu = {
 		Open = false,
 		Button = nil,
 		Token = 0,
 		Capturing = false,
+		UserMoved = false,
+		StoredPosition = nil,
 		UIElements = {},
 	}
 
@@ -92,6 +98,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		ImageTransparency = 1,
 		Visible = false,
 		Active = false,
+		ClipsDescendants = true,
 		ZIndex = 10020,
 		Parent = WindUI.ScreenGui,
 		ThemeTag = {
@@ -142,13 +149,13 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		Parent = Root,
 	}, {
 		New("UIPadding", {
-			PaddingTop = UDim.new(0, 14),
-			PaddingLeft = UDim.new(0, 14),
-			PaddingRight = UDim.new(0, 14),
-			PaddingBottom = UDim.new(0, 14),
+			PaddingTop = UDim.new(0, ContentPadding),
+			PaddingLeft = UDim.new(0, ContentPadding),
+			PaddingRight = UDim.new(0, ContentPadding),
+			PaddingBottom = UDim.new(0, ContentPadding),
 		}),
 		New("UIListLayout", {
-			Padding = UDim.new(0, 12),
+			Padding = UDim.new(0, ContentGap),
 			FillDirection = "Vertical",
 			HorizontalAlignment = "Left",
 		}),
@@ -161,22 +168,89 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	Menu.UIElements.GlassLayer = Root.GlassLayer
 	Menu.UIElements.Outline = Root.Outline
 
+	local function IsImageBackground(Value)
+		if typeof(Value) ~= "string" then
+			return false
+		end
+		if string.sub(Value, 1, 1) == "#" then
+			return false
+		end
+		if string.match(Value, "^video:") then
+			return false
+		end
+		return Value ~= ""
+	end
+
+	local function ApplyBackgroundMedia()
+		if MenuConfig.UseWindowBackground == false then
+			return
+		end
+
+		local Gradient = MenuConfig.BackgroundGradient
+			or (typeof(MenuConfig.Background) == "table" and MenuConfig.Background)
+			or Window.BackgroundGradient
+			or (typeof(Window.Background) == "table" and Window.Background)
+		local Image = MenuConfig.BackgroundImage
+			or (IsImageBackground(MenuConfig.Background) and MenuConfig.Background)
+			or (IsImageBackground(Window.Background) and Window.Background)
+
+		if Image then
+			Menu.UIElements.BackgroundImage = New("ImageLabel", {
+				Name = "BackgroundImage",
+				Size = UDim2.new(1, 0, 1, 0),
+				BackgroundTransparency = 1,
+				Image = tostring(Image),
+				ImageTransparency = MenuConfig.BackgroundImageTransparency or Window.BackgroundImageTransparency or 0.46,
+				ScaleType = MenuConfig.BackgroundScaleType or Window.BackgroundScaleType or "Crop",
+				ZIndex = 10019,
+				Parent = Root,
+			}, {
+				New("UICorner", {
+					CornerRadius = UDim.new(0, Window.ElementConfig.UICorner),
+				}),
+			})
+		end
+
+		if Gradient then
+			local UIGradient = New("UIGradient")
+			for Key, Value in next, Gradient do
+				UIGradient[Key] = Value
+			end
+
+			Menu.UIElements.BackgroundGradient = Creator.NewRoundFrame(Window.ElementConfig.UICorner, "Squircle", {
+				Name = "BackgroundGradient",
+				Size = UDim2.new(1, 0, 1, 0),
+				ImageTransparency = MenuConfig.BackgroundGradientTransparency
+					or MenuConfig.BackgroundOverlayTransparency
+					or Window.BackgroundOverlayTransparency
+					or 0.55,
+				ZIndex = 10019,
+				Parent = Root,
+			}, {
+				UIGradient,
+			})
+		end
+	end
+
+	ApplyBackgroundMedia()
+
 	local Header = New("Frame", {
 		Name = "Header",
-		Size = UDim2.new(1, 0, 0, 42),
+		Size = UDim2.new(1, 0, 0, Compact and 34 or 42),
 		BackgroundTransparency = 1,
+		Active = true,
 		Parent = Content,
 	}, {
 		New("UIListLayout", {
-			Padding = UDim.new(0, 10),
+			Padding = UDim.new(0, Compact and 8 or 10),
 			FillDirection = "Horizontal",
 			VerticalAlignment = "Center",
 		}),
 	})
 
-	local HeaderGlyph = CreateIcon("keyboard", nil, 18)
+	local HeaderGlyph = CreateIcon("keyboard", nil, Compact and 15 or 18)
 	local HeaderIcon = Creator.NewRoundFrame(999, "Squircle", {
-		Size = UDim2.new(0, 38, 0, 38),
+		Size = UDim2.new(0, Compact and 32 or 38, 0, Compact and 32 or 38),
 		ImageTransparency = 0.86,
 		Parent = Header,
 		ThemeTag = {
@@ -189,7 +263,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	HeaderGlyph.AnchorPoint = Vector2.new(0.5, 0.5)
 
 	local HeaderText = New("Frame", {
-		Size = UDim2.new(1, -48, 0, 0),
+		Size = UDim2.new(1, Compact and -40 or -48, 0, 0),
 		AutomaticSize = "Y",
 		BackgroundTransparency = 1,
 		Parent = Header,
@@ -199,11 +273,22 @@ function KeyBindMenu.New(Window, WindUI, Config)
 			Padding = UDim.new(0, 2),
 		}),
 	})
-	CreateText(HeaderText, MenuConfig.Title or "KeyBind Menu", 16, Enum.FontWeight.Bold, 0)
-	CreateText(HeaderText, MenuConfig.Desc or "Set the window toggle shortcut.", 12, Enum.FontWeight.Medium, 0.42)
+	CreateText(HeaderText, MenuConfig.Title or "KeyBind Menu", Compact and 14 or 16, Enum.FontWeight.Bold, 0)
+	local HeaderDesc = CreateText(
+		HeaderText,
+		MenuConfig.Desc or "Set the window toggle shortcut.",
+		Compact and 11 or 12,
+		Enum.FontWeight.Medium,
+		0.42
+	)
+	if MenuConfig.HideDesc ~= nil then
+		HeaderDesc.Visible = not MenuConfig.HideDesc
+	else
+		HeaderDesc.Visible = not Compact
+	end
 
 	local CurrentPanel = Creator.NewRoundFrame(16, "Squircle", {
-		Size = UDim2.new(1, 0, 0, 58),
+		Size = UDim2.new(1, 0, 0, Compact and 48 or 58),
 		ImageTransparency = 0.88,
 		Parent = Content,
 		ThemeTag = {
@@ -231,7 +316,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		Size = UDim2.new(0.4, 0, 1, 0),
 		BackgroundTransparency = 1,
 		Text = "Current",
-		TextSize = 12,
+		TextSize = Compact and 11 or 12,
 		TextXAlignment = "Left",
 		TextTransparency = 0.44,
 		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
@@ -245,7 +330,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		Size = UDim2.new(0.6, 0, 1, 0),
 		BackgroundTransparency = 1,
 		Text = CurrentKeyName,
-		TextSize = 18,
+		TextSize = Compact and 16 or 18,
 		TextXAlignment = "Right",
 		FontFace = Font.new(Creator.Font, Enum.FontWeight.Bold),
 		Parent = CurrentPanel,
@@ -255,7 +340,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	})
 
 	local Actions = New("Frame", {
-		Size = UDim2.new(1, 0, 0, 38),
+		Size = UDim2.new(1, 0, 0, Compact and 34 or 38),
 		BackgroundTransparency = 1,
 		Parent = Content,
 	}, {
@@ -276,23 +361,23 @@ function KeyBindMenu.New(Window, WindUI, Config)
 			},
 		}, {
 			New("UIPadding", {
-				PaddingLeft = UDim.new(0, 10),
-				PaddingRight = UDim.new(0, 10),
+				PaddingLeft = UDim.new(0, Compact and 8 or 10),
+				PaddingRight = UDim.new(0, Compact and 8 or 10),
 			}),
 			New("UIListLayout", {
-				Padding = UDim.new(0, 7),
+				Padding = UDim.new(0, Compact and 5 or 7),
 				FillDirection = "Horizontal",
 				VerticalAlignment = "Center",
 				HorizontalAlignment = "Center",
 			}),
-			IconName and CreateIcon(IconName, nil, 15) or nil,
+			IconName and CreateIcon(IconName, nil, Compact and 13 or 15) or nil,
 			New("TextLabel", {
 				Name = "Title",
 				Size = UDim2.new(0, 0, 1, 0),
 				AutomaticSize = "X",
 				BackgroundTransparency = 1,
 				Text = Title,
-				TextSize = 13,
+				TextSize = Compact and 12 or 13,
 				FontFace = Font.new(Creator.Font, Enum.FontWeight.SemiBold),
 				ThemeTag = {
 					TextColor3 = "Text",
@@ -367,7 +452,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 
 	local QuickRow = New("Frame", {
 		Name = "QuickKeys",
-		Size = UDim2.new(1, 0, 0, 32),
+		Size = UDim2.new(1, 0, 0, Compact and 28 or 32),
 		BackgroundTransparency = 1,
 		Parent = Content,
 	}, {
@@ -417,11 +502,23 @@ function KeyBindMenu.New(Window, WindUI, Config)
 
 		Root.Position = UDim2.fromOffset(X, Y)
 		Scrim.Size = UDim2.fromOffset(Viewport.X, Viewport.Y)
+
+		if Menu.UserMoved and Menu.StoredPosition then
+			Root.Position = Menu.StoredPosition
+		end
 	end
 
 	function Menu:SetButton(Button)
 		Menu.Button = Button
 	end
+
+	local DragModule = Creator.Drag(Root, { Header }, function(Dragging)
+		if not Dragging then
+			Menu.UserMoved = true
+			Menu.StoredPosition = Root.Position
+		end
+	end)
+	Menu.UIElements.Drag = DragModule
 
 	function Menu:OpenMenu()
 		if Menu.Open then
