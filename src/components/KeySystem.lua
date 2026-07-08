@@ -1,11 +1,17 @@
 local KeySystem = {}
 
 local Creator = require("../modules/Creator")
+local Motion = require("../modules/Motion")
 local New = Creator.New
-local Tween = Creator.Tween
+local Workspace = game:GetService("Workspace")
 
 local CreateButton = require("./ui/Button").New
 local CreateInput = require("./ui/Input").New
+
+local function GetViewportSize()
+	local Camera = Workspace.CurrentCamera
+	return Camera and Camera.ViewportSize or Vector2.new(1280, 720)
+end
 
 function KeySystem.new(Config, Filename, func, keyValidator)
 	local KeyDialogInit = require("./window/Dialog")
@@ -15,15 +21,50 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 	local EnteredKey
 
-	local ThumbnailSize = (Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Width) or 200
+	local ViewportSize = GetViewportSize()
+	local IsCompact = ViewportSize.X < 560
+	local UseThumbnail = Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Image and not IsCompact
+	local ThumbnailSize = (UseThumbnail and Config.KeySystem.Thumbnail.Width) or 200
 
-	local UISize = 430
-	if Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Image then
+	local UISize = Config.KeySystem.Width or 430
+	if UseThumbnail then
 		UISize = 430 + (ThumbnailSize / 2)
 	end
+	UISize = math.floor(math.min(UISize, math.max(300, ViewportSize.X - 24)))
 
 	KeyDialog.UIElements.Main.AutomaticSize = "Y"
 	KeyDialog.UIElements.Main.Size = UDim2.new(0, UISize, 0, 0)
+	KeyDialog.UIElements.MainContainer.ClipsDescendants = true
+
+	local DialogScale = New("UIScale", {
+		Name = "Scale",
+		Scale = 0.96,
+		Parent = KeyDialog.UIElements.MainContainer,
+	})
+
+	Creator.NewRoundFrame(26, "SquircleGlass", {
+		Name = "GlassLayer",
+		Size = UDim2.new(1, 1, 1, 1),
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.new(0.5, 0, 0.5, 0),
+		ImageTransparency = 0.84,
+		ZIndex = 9998,
+		Parent = KeyDialog.UIElements.MainContainer,
+		ThemeTag = {
+			ImageColor3 = "Primary",
+		},
+	})
+
+	Creator.NewRoundFrame(26, "SquircleOutline", {
+		Name = "Outline",
+		Size = UDim2.new(1, 0, 1, 0),
+		ImageTransparency = 0.62,
+		ZIndex = 9998,
+		Parent = KeyDialog.UIElements.MainContainer,
+		ThemeTag = {
+			ImageColor3 = "Outline",
+		},
+	})
 
 	local IconFrame
 
@@ -46,17 +87,17 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	})
 
 	local KeySystemTitle = New("TextLabel", {
-		AutomaticSize = "XY",
+		AutomaticSize = "Y",
+		Size = UDim2.new(1, 0, 0, 0),
 		BackgroundTransparency = 1,
-		Text = "Key System",
-		AnchorPoint = Vector2.new(1, 0.5),
-		Position = UDim2.new(1, 0, 0.5, 0),
-		TextTransparency = 1, -- .4 -- hidden
+		Text = Config.KeySystem.Subtitle or Config.KeySystem.Description or "Secure access gate",
+		TextXAlignment = "Left",
+		TextTransparency = 0.34,
 		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
 		ThemeTag = {
 			TextColor3 = "Text",
 		},
-		TextSize = 16,
+		TextSize = 13,
 	})
 
 	local IconAndTitleContainer = New("Frame", {
@@ -72,21 +113,92 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		Title,
 	})
 
-	local TitleContainer = New("Frame", {
+	local StatusText = New("TextLabel", {
+		BackgroundTransparency = 1,
+		Text = "Waiting",
+		TextSize = 12,
+		TextTransparency = 0.08,
+		AutomaticSize = "XY",
+		FontFace = Font.new(Creator.Font, Enum.FontWeight.Bold),
+		ThemeTag = {
+			TextColor3 = "Text",
+		},
+	})
+
+	local StatusPill = Creator.NewRoundFrame(999, "Squircle", {
+		Size = UDim2.new(0, 0, 0, 28),
+		AutomaticSize = "X",
+		ImageTransparency = 0.84,
+		ThemeTag = {
+			ImageColor3 = "ElementBackground",
+		},
+	}, {
+		New("UIPadding", {
+			PaddingLeft = UDim.new(0, 10),
+			PaddingRight = UDim.new(0, 10),
+		}),
+		New("UIListLayout", {
+			FillDirection = "Horizontal",
+			VerticalAlignment = "Center",
+			Padding = UDim.new(0, 6),
+		}),
+		Creator.NewRoundFrame(999, "Squircle", {
+			Name = "Dot",
+			Size = UDim2.fromOffset(7, 7),
+			ImageTransparency = 0,
+			ThemeTag = {
+				ImageColor3 = "Primary",
+			},
+		}),
+		StatusText,
+	})
+
+	local HeaderTop = New("Frame", {
 		AutomaticSize = "Y",
 		Size = UDim2.new(1, 0, 0, 0),
 		BackgroundTransparency = 1,
 	}, {
-		-- New("UIListLayout", {
-		--     Padding = UDim.new(0,9),
-		--     FillDirection = "Horizontal",
-		--     VerticalAlignment = "Bottom"
-		-- }),
+		New("UIListLayout", {
+			Padding = UDim.new(0, 10),
+			FillDirection = "Horizontal",
+			VerticalAlignment = "Center",
+		}),
 		IconAndTitleContainer,
+		StatusPill,
+	})
+
+	IconAndTitleContainer.Size = UDim2.new(1, -112, 0, 0)
+
+	local TitleContainer = Creator.NewRoundFrame(18, "Squircle", {
+		AutomaticSize = "Y",
+		Size = UDim2.new(1, 0, 0, 0),
+		ImageTransparency = 0.86,
+		ThemeTag = {
+			ImageColor3 = "ElementBackground",
+		},
+	}, {
+		New("UIGradient", {
+			Rotation = 18,
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.06),
+				NumberSequenceKeypoint.new(1, 0.34),
+			}),
+		}),
+		New("UIPadding", {
+			PaddingTop = UDim.new(0, 14),
+			PaddingLeft = UDim.new(0, 14),
+			PaddingRight = UDim.new(0, 14),
+			PaddingBottom = UDim.new(0, 14),
+		}),
+		New("UIListLayout", {
+			Padding = UDim.new(0, 6),
+			FillDirection = "Vertical",
+		}),
+		HeaderTop,
 		KeySystemTitle,
 	})
 
-	local InputFrame = CreateInput("Enter Key", "key", nil, "Input", function(k)
+	local InputFrame = CreateInput(Config.KeySystem.Placeholder or "Enter Key", "key", nil, "Input", function(k)
 		EnteredKey = k
 	end)
 
@@ -109,6 +221,63 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		})
 	end
 
+	local ProgressFill = Creator.NewRoundFrame(999, "Squircle", {
+		Name = "Fill",
+		Size = UDim2.new(0.18, 0, 1, 0),
+		ImageTransparency = 0.06,
+		ThemeTag = {
+			ImageColor3 = "Primary",
+		},
+	})
+	local ProgressText = New("TextLabel", {
+		Size = UDim2.new(1, 0, 0, 16),
+		BackgroundTransparency = 1,
+		Text = "Access check ready",
+		TextSize = 12,
+		TextTransparency = 0.34,
+		TextXAlignment = "Left",
+		FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
+		ThemeTag = {
+			TextColor3 = "Text",
+		},
+	})
+	local ProgressCard = New("Frame", {
+		Size = UDim2.new(1, 0, 0, 30),
+		BackgroundTransparency = 1,
+	}, {
+		New("UIListLayout", {
+			FillDirection = "Vertical",
+			Padding = UDim.new(0, 6),
+		}),
+		ProgressText,
+		Creator.NewRoundFrame(999, "Squircle", {
+			Size = UDim2.new(1, 0, 0, 8),
+			ImageTransparency = 0.86,
+			ThemeTag = {
+				ImageColor3 = "ElementBackground",
+			},
+		}, {
+			ProgressFill,
+		}),
+	})
+
+	local function SetState(Text, Progress, IsError)
+		StatusText.Text = tostring(Text or StatusText.Text)
+		ProgressText.Text = tostring(Text or ProgressText.Text)
+		if IsError then
+			StatusPill.Dot.ImageColor3 = Color3.fromRGB(255, 94, 94)
+		else
+			Creator.SetThemeTag(StatusPill.Dot, {
+				ImageColor3 = "Primary",
+			}, 0.12)
+		end
+		if Progress ~= nil then
+			Motion.Play(ProgressFill, "Switch", {
+				Size = UDim2.new(math.clamp(tonumber(Progress) or 0, 0, 1), 0, 1, 0),
+			}, nil, nil, "KeySystemProgress")
+		end
+	end
+
 	local ButtonsContainer = New("Frame", {
 		Size = UDim2.new(1, 0, 0, 42),
 		BackgroundTransparency = 1,
@@ -126,7 +295,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	})
 
 	local ThumbnailFrame
-	if Config.KeySystem.Thumbnail and Config.KeySystem.Thumbnail.Image then
+	if UseThumbnail then
 		local ThumbnailTitle
 		if Config.KeySystem.Thumbnail.Title then
 			ThumbnailTitle = New("TextLabel", {
@@ -176,6 +345,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			TitleContainer,
 			NoteText,
 			InputFrame,
+			ProgressCard,
 			ButtonsContainer,
 			New("UIPadding", {
 				PaddingTop = UDim.new(0, 16),
@@ -203,7 +373,10 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 	if Config.KeySystem.URL then
 		CreateButton("Get key", "key", function()
-			setclipboard(Config.KeySystem.URL)
+			if setclipboard then
+				setclipboard(Config.KeySystem.URL)
+			end
+			SetState("Key link copied", 0.36)
 		end, "Secondary", ButtonsContainer.Frame)
 	end
 
@@ -216,7 +389,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		--     platoboost = "Platoboost",
 		--     pandadevelopment = "Panda Development",
 		-- }
-		local Width = 240
+		local Width = math.min(240, math.max(190, UISize - 42))
 		local Opened = false
 		local ButtonFrame = CreateButton("Get key", "key", nil, "Secondary", ButtonsContainer.Frame)
 
@@ -316,14 +489,8 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				serviceInstance.Type = i.Type
 				table.insert(Services, serviceInstance)
 
-				local IconFrame = Creator.Image(
-					i.Icon or serviceDef.Icon or Icons[i.Type] or "user",
-					i.Icon or serviceDef.Icon or Icons[i.Type] or "user",
-					0,
-					"Temp",
-					"KeySystem",
-					true
-				)
+				local ServiceIcon = i.Icon or serviceDef.Icon or "key-round"
+				local IconFrame = Creator.Image(ServiceIcon, ServiceIcon, 0, "Temp", "KeySystem", true)
 				IconFrame.Size = UDim2.new(0, 24, 0, 24)
 
 				local APIFrame = Creator.NewRoundFrame(10, "Squircle", {
@@ -384,17 +551,21 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				}, true)
 
 				Creator.AddSignal(APIFrame.MouseEnter, function()
-					Tween(APIFrame, 0.08, { ImageTransparency = 0.95 }):Play()
+					Motion.Play(APIFrame, "Hover", { ImageTransparency = 0.94 }, nil, nil, "ServiceHover")
 				end)
 				Creator.AddSignal(APIFrame.InputEnded, function()
-					Tween(APIFrame, 0.08, { ImageTransparency = 1 }):Play()
+					Motion.Play(APIFrame, "Hover", { ImageTransparency = 1 }, nil, nil, "ServiceHover")
 				end)
+				Motion.AttachPress(APIFrame, Creator, {
+					Amount = 0.985,
+				})
 				Creator.AddSignal(APIFrame.MouseButton1Click, function()
 					serviceInstance.Copy()
+					SetState("Key link copied", 0.36)
 					Config.WindUI:Notify({
 						Title = "Key System",
 						Content = "Key link copied to clipboard.",
-						Image = "key",
+						Icon = "key",
 					})
 				end)
 			end
@@ -402,74 +573,91 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 		Creator.AddSignal(ButtonFrame.MouseButton1Click, function()
 			if not Opened then
-				Tween(
+				Motion.Play(
 					DropdownContainer,
-					0.3,
+					"Expand",
 					{ Size = UDim2.new(0, Width, 0, DropdownFrame.AbsoluteSize.Y + 1) },
 					Enum.EasingStyle.Quint,
-					Enum.EasingDirection.Out
-				):Play()
-				Tween(ChevronDown, 0.3, { Rotation = 180 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+					Enum.EasingDirection.Out,
+					"KeyService"
+				)
+				Motion.Play(ChevronDown, "Expand", { Rotation = 180 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "KeyServiceChevron")
 			else
-				Tween(
+				Motion.Play(
 					DropdownContainer,
-					0.25,
+					"Expand",
 					{ Size = UDim2.new(0, Width, 0, 0) },
 					Enum.EasingStyle.Quint,
-					Enum.EasingDirection.Out
-				):Play()
-				Tween(ChevronDown, 0.25, { Rotation = 0 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out):Play()
+					Enum.EasingDirection.Out,
+					"KeyService"
+				)
+				Motion.Play(ChevronDown, "Expand", { Rotation = 0 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "KeyServiceChevron")
 			end
 			Opened = not Opened
 		end)
 	end
 
-	local function handleSuccess(key)
+	local function handleSuccess(key, ShouldSave)
+		SetState("Access granted", 1)
 		KeyDialog:Close()()
-		writefile((Config.Folder or "Temp") .. "/" .. Filename .. ".key", tostring(key))
-		task.wait(0.4)
+		if ShouldSave and writefile then
+			pcall(function()
+				writefile((Config.Folder or "Temp") .. "/" .. Filename .. ".key", tostring(key))
+			end)
+		end
+		task.wait(0.35)
 		func(true)
 	end
 
+	local IsChecking = false
 	local SubmitButton = CreateButton("Submit", "arrow-right", function()
+		if IsChecking then
+			return
+		end
+		IsChecking = true
+		SetState("Checking key", 0.72)
+
 		local key = tostring(EnteredKey or "empty")
-		local folder = Config.Folder or Config.Title
+		local function Reject(Message)
+			IsChecking = false
+			SetState("Invalid key", 0.08, true)
+			Config.WindUI:Notify({
+				Title = "Key System",
+				Content = Message or "Invalid key.",
+				Icon = "triangle-alert",
+			})
+		end
 
 		if Config.KeySystem.KeyValidator then
-			local isValid = Config.KeySystem.KeyValidator(key)
+			local ValidatorOk, isValid, Message = pcall(Config.KeySystem.KeyValidator, key)
+			if not ValidatorOk then
+				Reject(tostring(isValid))
+				return
+			end
 
 			if isValid then
-				if Config.KeySystem.SaveKey then
-					handleSuccess(key)
-				else
-					KeyDialog:Close()()
-					task.wait(0.4)
-					func(true)
-				end
+				handleSuccess(key, Config.KeySystem.SaveKey)
 			else
-				Config.WindUI:Notify({
-					Title = "Key System. Error",
-					Content = "Invalid key.",
-					Icon = "triangle-alert",
-				})
+				Reject(Message or "Invalid key.")
 			end
 		elseif not Config.KeySystem.API then
 			local isKey = type(Config.KeySystem.Key) == "table" and table.find(Config.KeySystem.Key, key)
 				or Config.KeySystem.Key == key
 
 			if isKey then
-				if Config.KeySystem.SaveKey then
-					handleSuccess(key)
-				else
-					KeyDialog:Close()()
-					task.wait(0.4)
-					func(true)
-				end
+				handleSuccess(key, Config.KeySystem.SaveKey)
+			else
+				Reject("Invalid key.")
 			end
 		else
 			local isSuccess, result
 			for _, service in next, Services do
-				local success, res = service.Verify(key)
+				local VerifyOk, success, res = pcall(service.Verify, key)
+				if not VerifyOk then
+					local ErrorMessage = success
+					success = false
+					res = tostring(ErrorMessage)
+				end
 				if success then
 					isSuccess, result = true, res
 					break
@@ -478,13 +666,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			end
 
 			if isSuccess then
-				handleSuccess(key)
+				handleSuccess(key, Config.KeySystem.SaveKey ~= false)
 			else
-				Config.WindUI:Notify({
-					Title = "Key System. Error",
-					Content = result,
-					Icon = "triangle-alert",
-				})
+				Reject(result or "Invalid key.")
 			end
 		end
 	end, "Primary", ButtonsContainer)
@@ -501,7 +685,9 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 	--     )
 	-- end)
 
+	SetState("Waiting for key", 0.18)
 	KeyDialog:Open()
+	Motion.Play(DialogScale, "DropdownOpen", { Scale = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "KeySystemScale")
 end
 
 return KeySystem

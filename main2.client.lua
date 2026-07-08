@@ -38,12 +38,16 @@ local Window = WindUI:CreateWindow({
 	--NewElements = true,
 	--Transparent = true,
 	ToggleKey = Enum.KeyCode.F,
+	LoadingScreen = true,
 	--Acrylic = true,
 
 	--[[
 	KeySystem = {
 		Title = "Key System",
-		Description = "Enter the correct key to unlock the window",
+		Subtitle = "Enter the correct key to unlock the window",
+		Placeholder = "Paste your access key",
+		Note = "Use <b>HelloWorld</b> for this example.",
+		SaveKey = true,
 		KeyValidator = function(key)
 			return key == "HelloWorld"
 		end,

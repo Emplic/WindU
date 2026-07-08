@@ -83,6 +83,7 @@ if Package then
 end
 
 local KeySystem = require("./components/KeySystem")
+local LoadingScreen = require("./components/LoadingScreen")
 
 local Creator = WindUI.Creator
 
@@ -180,6 +181,10 @@ end
 
 function WindUI:SetNotificationLower(Val)
 	Holder.SetLower(Val)
+end
+
+function WindUI:LoadingScreen(Config)
+	return LoadingScreen.new(WindUI, Config)
 end
 
 function WindUI:SetFont(FontId)
@@ -337,6 +342,42 @@ function WindUI:CreateWindow(Config)
 	WindUI.Motion:Configure(Config.Motion)
 
 	local CanLoadWindow = true
+	local LoaderConfig = Config.LoadingScreen or Config.Loader or Config.Loading
+	local Loader
+
+	local function OpenLoader(Status, Progress)
+		if LoaderConfig == nil or LoaderConfig == false then
+			return nil
+		end
+
+		if not Loader then
+			local Options = {}
+			if typeof(LoaderConfig) == "table" then
+				for Key, Value in next, LoaderConfig do
+					Options[Key] = Value
+				end
+			end
+
+			Options.Title = Options.Title or Config.Title or "WindUI"
+			Options.Desc = Options.Desc or "Loading interface"
+			Options.Icon = Options.Icon or Config.Icon or "sparkles"
+			Options.Folder = Options.Folder or Config.Folder
+			Loader = LoadingScreen.new(WindUI, Options)
+		end
+
+		if Status then
+			Loader:SetStatus(Status)
+		end
+		if Progress then
+			Loader:SetProgress(Progress)
+		end
+
+		return Loader
+	end
+
+	if not Config.KeySystem then
+		OpenLoader("Preparing interface", 0.16)
+	end
 
 	local Theme = WindUI.Themes[Config.Theme or "Dark"]
 
@@ -421,8 +462,11 @@ function WindUI:CreateWindow(Config)
 		repeat
 			task.wait()
 		until CanLoadWindow
+
+		OpenLoader("Access granted", 0.42)
 	end
 
+	OpenLoader("Building window", 0.72)
 	local Window = CreateWindow(Config)
 
 	WindUI.Transparent = Config.Transparent
@@ -430,6 +474,12 @@ function WindUI:CreateWindow(Config)
 
 	if Config.Acrylic then
 		Acrylic.init()
+	end
+
+	if Loader then
+		Loader:SetStatus("Ready")
+		Loader:SetProgress(1)
+		Loader:Close((typeof(LoaderConfig) == "table" and LoaderConfig.CloseDelay) or 0.18)
 	end
 
 	-- function Window:ToggleTransparency(Value)

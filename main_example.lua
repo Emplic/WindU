@@ -11,6 +11,16 @@ local Window = WindUI:CreateWindow({
 	ElementGap = 8,
 	LiquidGlass = true,
 	ToggleKey = Enum.KeyCode.RightShift,
+	LoadingScreen = {
+		Title = "WindUI Full Example",
+		Desc = "Preparing liquid UI kit",
+		Icon = "sparkles",
+		Width = 350,
+		Steps = { "Theme", "Motion", "Elements" },
+		ScrimTransparency = 0.28,
+		CardTransparency = 0.14,
+		CloseDelay = 0.12,
+	},
 	KeyBindMenu = {
 		DefaultKey = "RightShift",
 		QuickKeys = { "RightShift", "F", "LeftControl" },
