@@ -11,6 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const config = {
     output: "export",
+    trailingSlash: true,
     basePath,
     assetPrefix: basePath ? `${basePath}/` : "",
     outputFileTracingRoot: __dirname,
