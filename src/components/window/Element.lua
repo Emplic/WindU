@@ -605,7 +605,7 @@ return function(Config)
 	ApplyNativeCorners(CurrentCorners)
 
 	if Element.Golden then
-		Element.UIElements.GoldenEffect = GoldenEffect.Apply(Main, {
+		Element.UIElements.GoldenEffect = GoldenEffect.Apply(ElementFullFrame, {
 			Corner = Element.UICorner,
 			Compact = Element.Size == "Small",
 			FillTransparency = 0.8,

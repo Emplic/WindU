@@ -35,8 +35,8 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	local MenuConfig = typeof(Window.KeyBindMenu) == "table" and Window.KeyBindMenu or {}
 	local IsMobile = (UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled) or Window.IsPC == false
 	local Compact = MenuConfig.Compact == true or (MenuConfig.Compact ~= false and IsMobile)
-	local RootWidth = MenuConfig.Width or (Compact and 286 or 326)
-	local RootHeight = MenuConfig.Height or (Compact and 202 or 230)
+	local RootWidth = MenuConfig.Width or (Compact and 330 or 326)
+	local RootHeight = MenuConfig.Height or (Compact and 216 or 230)
 	local ContentPadding = Compact and 10 or 14
 	local ContentGap = Compact and 9 or 12
 	local QuickKeys = MenuConfig.QuickKeys or { "RightShift", "F", "LeftControl" }
@@ -47,6 +47,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		Capturing = false,
 		UserMoved = false,
 		StoredPosition = nil,
+		TargetPosition = nil,
 		UIElements = {},
 	}
 
@@ -93,7 +94,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	local Root = Creator.NewRoundFrame(Window.ElementConfig.UICorner, "Squircle", {
 		Name = "KeyBindMenu",
 		Size = UDim2.new(0, RootWidth, 0, RootHeight),
-		AnchorPoint = Vector2.new(1, 0),
+		AnchorPoint = Compact and Vector2.new(0.5, 1) or Vector2.new(1, 0),
 		Position = UDim2.fromOffset(0, 0),
 		ImageTransparency = 1,
 		Visible = false,
@@ -158,6 +159,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 			Padding = UDim.new(0, ContentGap),
 			FillDirection = "Vertical",
 			HorizontalAlignment = "Left",
+			SortOrder = "LayoutOrder",
 		}),
 	})
 
@@ -234,11 +236,33 @@ function KeyBindMenu.New(Window, WindUI, Config)
 
 	ApplyBackgroundMedia()
 
+	local Handle = New("Frame", {
+		Name = "DragHandle",
+		Size = UDim2.new(1, 0, 0, 8),
+		BackgroundTransparency = 1,
+		LayoutOrder = 0,
+		Visible = Compact,
+		Parent = Content,
+	}, {
+		New("Frame", {
+			Size = UDim2.new(0, 42, 0, 4),
+			Position = UDim2.new(0.5, 0, 0, 1),
+			AnchorPoint = Vector2.new(0.5, 0),
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+			BackgroundTransparency = 0.72,
+		}, {
+			New("UICorner", {
+				CornerRadius = UDim.new(1, 0),
+			}),
+		}),
+	})
+
 	local Header = New("Frame", {
 		Name = "Header",
 		Size = UDim2.new(1, 0, 0, Compact and 34 or 42),
 		BackgroundTransparency = 1,
 		Active = true,
+		LayoutOrder = 1,
 		Parent = Content,
 	}, {
 		New("UIListLayout", {
@@ -263,7 +287,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	HeaderGlyph.AnchorPoint = Vector2.new(0.5, 0.5)
 
 	local HeaderText = New("Frame", {
-		Size = UDim2.new(1, Compact and -40 or -48, 0, 0),
+		Size = UDim2.new(1, Compact and -78 or -48, 0, 0),
 		AutomaticSize = "Y",
 		BackgroundTransparency = 1,
 		Parent = Header,
@@ -273,10 +297,10 @@ function KeyBindMenu.New(Window, WindUI, Config)
 			Padding = UDim.new(0, 2),
 		}),
 	})
-	CreateText(HeaderText, MenuConfig.Title or "KeyBind Menu", Compact and 14 or 16, Enum.FontWeight.Bold, 0)
+	CreateText(HeaderText, MenuConfig.Title or (Compact and "Keybind" or "KeyBind Menu"), Compact and 14 or 16, Enum.FontWeight.Bold, 0)
 	local HeaderDesc = CreateText(
 		HeaderText,
-		MenuConfig.Desc or "Set the window toggle shortcut.",
+		MenuConfig.Desc or (Compact and "Mobile quick toggle controls." or "Set the window toggle shortcut."),
 		Compact and 11 or 12,
 		Enum.FontWeight.Medium,
 		0.42
@@ -287,9 +311,29 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		HeaderDesc.Visible = not Compact
 	end
 
+	local CloseIcon = CreateIcon("x", nil, 13)
+	local CloseButton = Creator.NewRoundFrame(999, "Squircle", {
+		Size = Compact and UDim2.new(0, 28, 0, 28) or UDim2.new(0, 0, 0, 0),
+		ImageTransparency = 0.9,
+		Visible = Compact,
+		Parent = Header,
+		ThemeTag = {
+			ImageColor3 = "ElementBackground",
+		},
+	}, {
+		CloseIcon,
+	})
+	CloseIcon.Position = UDim2.new(0.5, 0, 0.5, 0)
+	CloseIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+
+	Creator.AddSignal(CloseButton.MouseButton1Click, function()
+		Menu:CloseMenu()
+	end)
+
 	local CurrentPanel = Creator.NewRoundFrame(16, "Squircle", {
 		Size = UDim2.new(1, 0, 0, Compact and 48 or 58),
-		ImageTransparency = 0.88,
+		ImageTransparency = Compact and 0.8 or 0.88,
+		LayoutOrder = 2,
 		Parent = Content,
 		ThemeTag = {
 			ImageColor3 = "ElementBackground",
@@ -298,7 +342,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		New("UIStroke", {
 			ApplyStrokeMode = "Border",
 			Color = Color3.new(1, 1, 1),
-			Transparency = 0.88,
+			Transparency = Compact and 0.8 or 0.88,
 			Thickness = 1,
 		}),
 		New("UIPadding", {
@@ -340,8 +384,9 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	})
 
 	local Actions = New("Frame", {
-		Size = UDim2.new(1, 0, 0, Compact and 34 or 38),
+		Size = UDim2.new(1, 0, 0, Compact and 38 or 38),
 		BackgroundTransparency = 1,
+		LayoutOrder = 3,
 		Parent = Content,
 	}, {
 		New("UIListLayout", {
@@ -354,7 +399,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	local function CreateButton(Parent, Title, IconName, Variant, Callback)
 		local Button = Creator.NewRoundFrame(14, "Squircle", {
 			Size = UDim2.new(0.5, -4, 1, 0),
-			ImageTransparency = Variant == "Primary" and 0.18 or 0.9,
+			ImageTransparency = Variant == "Primary" and (Compact and 0.08 or 0.18) or (Compact and 0.84 or 0.9),
 			Parent = Parent,
 			ThemeTag = {
 				ImageColor3 = Variant == "Primary" and "Primary" or "ElementBackground",
@@ -442,7 +487,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		end)
 	end
 
-	local SetButton = CreateButton(Actions, "Set Key", "scan-line", "Primary", function()
+	local SetButton = CreateButton(Actions, Compact and "Bind" or "Set Key", "scan-line", "Primary", function()
 		Menu:Capture()
 	end)
 	local ClearButton = CreateButton(Actions, "Clear", "x", "Secondary", function()
@@ -452,8 +497,9 @@ function KeyBindMenu.New(Window, WindUI, Config)
 
 	local QuickRow = New("Frame", {
 		Name = "QuickKeys",
-		Size = UDim2.new(1, 0, 0, Compact and 28 or 32),
+		Size = UDim2.new(1, 0, 0, Compact and 34 or 32),
 		BackgroundTransparency = 1,
+		LayoutOrder = 4,
 		Parent = Content,
 	}, {
 		New("UIListLayout", {
@@ -463,10 +509,22 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		}),
 	})
 
+	local function ShortKeyName(KeyName)
+		local Text = tostring(KeyName)
+		if not Compact then
+			return Text
+		end
+
+		Text = Text:gsub("Right", "R")
+		Text = Text:gsub("Left", "L")
+		Text = Text:gsub("Control", "Ctrl")
+		return Text
+	end
+
 	for _, KeyName in next, QuickKeys do
 		local _, EnumKey = NormalizeKey(KeyName)
 		if EnumKey then
-			CreateButton(QuickRow, tostring(KeyName), nil, "Secondary", function()
+			CreateButton(QuickRow, ShortKeyName(KeyName), nil, "Secondary", function()
 				StopCapture()
 				ApplyKey(EnumKey)
 			end).Size = UDim2.new(1 / #QuickKeys, -4, 1, 0)
@@ -483,6 +541,24 @@ function KeyBindMenu.New(Window, WindUI, Config)
 	local function UpdateRootPosition()
 		local Viewport = GetViewportSize()
 		local Margin = 12
+
+		if Compact then
+			RootWidth = math.min(MenuConfig.Width or 330, math.max(240, Viewport.X - (Margin * 2)))
+			RootHeight = MenuConfig.Height or 216
+			Root.Size = UDim2.fromOffset(RootWidth, RootHeight)
+			Root.AnchorPoint = Vector2.new(0.5, 1)
+			Menu.TargetPosition = UDim2.fromOffset(Viewport.X / 2, Viewport.Y - Margin)
+			Root.Position = Menu.TargetPosition
+			Scrim.Size = UDim2.fromOffset(Viewport.X, Viewport.Y)
+
+			if Menu.UserMoved and Menu.StoredPosition then
+				Root.Position = Menu.StoredPosition
+				Menu.TargetPosition = Menu.StoredPosition
+			end
+
+			return
+		end
+
 		local X = Viewport.X - Margin
 		local Y = Margin + Window.Topbar.Height
 
@@ -501,6 +577,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		end
 
 		Root.Position = UDim2.fromOffset(X, Y)
+		Menu.TargetPosition = Root.Position
 		Scrim.Size = UDim2.fromOffset(Viewport.X, Viewport.Y)
 
 		if Menu.UserMoved and Menu.StoredPosition then
@@ -512,7 +589,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		Menu.Button = Button
 	end
 
-	local DragModule = Creator.Drag(Root, { Header }, function(Dragging)
+	local DragModule = Creator.Drag(Root, { Header, Handle }, function(Dragging)
 		if not Dragging then
 			Menu.UserMoved = true
 			Menu.StoredPosition = Root.Position
@@ -528,21 +605,40 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		Menu.Open = true
 		Menu.Token += 1
 		UpdateRootPosition()
+		local TargetPosition = Menu.TargetPosition or Root.Position
 		Root.Visible = true
 		Root.Active = true
 		Scrim.Visible = true
+		if Compact then
+			Root.Position = UDim2.new(
+				TargetPosition.X.Scale,
+				TargetPosition.X.Offset,
+				TargetPosition.Y.Scale,
+				TargetPosition.Y.Offset + 18
+			)
+		end
 		Root.ImageTransparency = 1
 		Content.GroupTransparency = 1
 		Root.GlassLayer.ImageTransparency = 1
 		Root.Outline.ImageTransparency = 1
 		Root.Scale.Scale = 0.98
 		Scrim.BackgroundTransparency = 1
-		Motion.Play(Root, "DropdownOpen", { ImageTransparency = 0.18 }, nil, nil, "KeyBindMenu")
+		Motion.Play(Root, "DropdownOpen", {
+			ImageTransparency = Compact and 0.06 or 0.18,
+			Position = TargetPosition,
+		}, nil, nil, "KeyBindMenu")
 		Motion.Play(Content, "DropdownOpen", { GroupTransparency = 0 }, nil, nil, "KeyBindContent")
-		Motion.Play(Root.GlassLayer, "DropdownOpen", { ImageTransparency = 0.78 }, nil, nil, "KeyBindGlass")
-		Motion.Play(Root.Outline, "DropdownOpen", { ImageTransparency = 0.72 }, nil, nil, "KeyBindOutline")
+		Motion.Play(Root.GlassLayer, "DropdownOpen", { ImageTransparency = Compact and 0.9 or 0.78 }, nil, nil, "KeyBindGlass")
+		Motion.Play(Root.Outline, "DropdownOpen", { ImageTransparency = Compact and 0.5 or 0.72 }, nil, nil, "KeyBindOutline")
 		Motion.Play(Root.Scale, "DropdownOpen", { Scale = 1 }, nil, nil, "KeyBindScale")
-		Motion.Play(Scrim, "DropdownOpen", { BackgroundTransparency = MenuConfig.ScrimTransparency or 0.78 }, nil, nil, "KeyBindScrim")
+		Motion.Play(
+			Scrim,
+			"DropdownOpen",
+			{ BackgroundTransparency = MenuConfig.ScrimTransparency or (Compact and 0.62 or 0.78) },
+			nil,
+			nil,
+			"KeyBindScrim"
+		)
 	end
 
 	function Menu:CloseMenu()
@@ -555,7 +651,16 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		local Token = Menu.Token
 		StopCapture()
 		Root.Active = false
-		Motion.Play(Root, "DropdownClose", { ImageTransparency = 1 }, nil, nil, "KeyBindMenu")
+		local ClosePosition = Root.Position
+		if Compact then
+			ClosePosition = UDim2.new(
+				Root.Position.X.Scale,
+				Root.Position.X.Offset,
+				Root.Position.Y.Scale,
+				Root.Position.Y.Offset + 18
+			)
+		end
+		Motion.Play(Root, "DropdownClose", { ImageTransparency = 1, Position = ClosePosition }, nil, nil, "KeyBindMenu")
 		Motion.Play(Content, "DropdownClose", { GroupTransparency = 1 }, nil, nil, "KeyBindContent")
 		Motion.Play(Root.GlassLayer, "DropdownClose", { ImageTransparency = 1 }, nil, nil, "KeyBindGlass")
 		Motion.Play(Root.Outline, "DropdownClose", { ImageTransparency = 1 }, nil, nil, "KeyBindOutline")

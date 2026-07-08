@@ -3,6 +3,7 @@ local cloneref = (cloneref or clonereference or function(instance)
 end)
 
 local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 
 local UserInputService = cloneref(game:GetService("UserInputService"))
 local Mouse = Players.LocalPlayer:GetMouse()
@@ -10,7 +11,6 @@ local Mouse = Players.LocalPlayer:GetMouse()
 local Creator = require("../../modules/Creator")
 local Motion = require("../../modules/Motion")
 local New = Creator.New
-local GoldenEffect = require("./GoldenEffect")
 
 local CreateToolTip = require("../ui/Tooltip").New
 local CreateScrollSlider = require("../ui/ScrollSlider").New
@@ -186,14 +186,48 @@ function TabModule.New(Config, UIScale)
 	}, true)
 
 	if Tab.Golden then
-		Tab.UIElements.GoldenEffect = GoldenEffect.Apply(Tab.UIElements.Main, {
-			Corner = Tab.UICorner,
-			Compact = true,
-			FillTransparency = 0.86,
-			OutlineTransparency = 0.2,
-			SheenTransparency = 0.86,
-			SparklePause = 1.45,
+		Tab.UIElements.Main.Frame.ImageColor3 = Color3.fromRGB(64, 49, 18)
+		Tab.UIElements.Main.Frame.ImageTransparency = 0.82
+		Tab.UIElements.GoldenStroke = New("UIStroke", {
+			ApplyStrokeMode = "Border",
+			Color = Color3.fromRGB(255, 214, 92),
+			Transparency = 0.62,
+			Thickness = 1,
+			Parent = Tab.UIElements.Main,
 		})
+		Tab.UIElements.GoldenShine = New("UIGradient", {
+			Rotation = 18,
+			Offset = Vector2.new(-1, 0),
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 185, 56)),
+				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 244, 184)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(154, 94, 18)),
+			}),
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.88),
+				NumberSequenceKeypoint.new(0.48, 0.72),
+				NumberSequenceKeypoint.new(0.55, 0.18),
+				NumberSequenceKeypoint.new(0.64, 0.74),
+				NumberSequenceKeypoint.new(1, 0.9),
+			}),
+			Parent = Tab.UIElements.Main.Frame,
+		})
+
+		if Motion:IsEnabled() and not Motion.Reduced then
+			task.spawn(function()
+				while Tab.UIElements.Main and Tab.UIElements.Main.Parent and Tab.UIElements.GoldenShine do
+					Tab.UIElements.GoldenShine.Offset = Vector2.new(-1, 0)
+					local Tween = TweenService:Create(
+						Tab.UIElements.GoldenShine,
+						TweenInfo.new(1.4, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut),
+						{ Offset = Vector2.new(1, 0) }
+					)
+					Tween:Play()
+					Tween.Completed:Wait()
+					task.wait(1.1)
+				end
+			end)
+		end
 	end
 
 	local TextOffset = 0
