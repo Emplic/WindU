@@ -136,6 +136,10 @@ WindUI.NotificationGui = New("ScreenGui", {
 	Name = "WindUI/Notifications",
 	Parent = GUIParent,
 	IgnoreGuiInset = true,
+	ScreenInsets = "None",
+	ResetOnSpawn = false,
+	DisplayOrder = 999999,
+	ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 })
 WindUI.DropdownGui = New("ScreenGui", {
 	Name = "WindUI/Dropdowns",

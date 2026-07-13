@@ -20,7 +20,8 @@ return [[
         "updater": "python3 updater/main.py",
         "docs:dev": "npm --prefix website run dev",
         "docs:build": "npm --prefix website run build",
-        "docs:start": "npm --prefix website run start"
+        "docs:start": "npm --prefix website run start",
+        "test:static": "node tests/acrylic-theme-safety.test.js && node tests/notification-layout-safety.test.js"
     },
     "keywords": [
         "ui-library",

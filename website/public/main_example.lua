@@ -112,6 +112,9 @@ OverviewTab:ActionList({
 			Icon = Action.Icon,
 			Style = Action.Value,
 			Duration = Action.Value == "Warning" and false or 4,
+			Buttons = Action.Value == "Warning" and {
+				{ Title = "Dismiss" },
+			} or nil,
 		})
 	end,
 })
