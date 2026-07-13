@@ -23,6 +23,7 @@ Notifications are temporary messages displayed to inform users about events or s
 WindUI:Notify({
     Title = "Success",
     Content = "Operation completed successfully",
+    Style = "Success",
     Duration = 3
 })
 ```
@@ -32,6 +33,7 @@ WindUI:Notify({
 WindUI:Notify({
     Title = "Success",
     Content = "Operation completed successfully",
+    Style = "Success", -- Info, Notice, Success, Warning, Error, Neutral
     Icon = "check-circle", -- lucide icon or "rbxassetid://". optional
     Duration = 3, -- time in seconds. optional
 })
@@ -39,14 +41,45 @@ WindUI:Notify({
     </TabsContent>
 </Tabs>
 
+## Styles
+
+Use `Style`, `Type`, or `Variant` to pick the notification preset. Aliases like `warn`, `successful`, and `green` are normalized automatically.
+
+```luau
+WindUI:Notify({
+    Title = "Heads up",
+    Content = "This is a notice-style notification.",
+    Style = "Notice",
+})
+
+WindUI:Notify({
+    Title = "Saved",
+    Content = "Config saved successfully.",
+    Style = "Success",
+})
+
+WindUI:Notify({
+    Title = "Warning",
+    Content = "Missing permission.",
+    Style = "Warning",
+    Duration = false, -- keep it open until closed
+})
+```
+
 ## Notification Parameters
 
 <TypeTable
     data={[
         { name: "Title", type: "string", description: "Notification title", default: "Notification" },
         { name: "Content", type: "string", description: "Notification message text", default: "nil" },
-        { name: "Icon", type: "string?", description: "Icon identifier (lucide icon or rbxassetid://)", default: "nil" },
-        { name: "Duration", type: "number?", description: "Display duration in seconds", default: "3" },
+        { name: "Style / Type / Variant", type: '"Info" | "Notice" | "Success" | "Warning" | "Error" | "Neutral"', description: "Visual preset. Common aliases like warn, successful and green are supported.", default: "Info" },
+        { name: "Icon", type: "string?", description: "Icon identifier (lucide icon or rbxassetid://). Defaults to the style icon.", default: "style icon" },
+        { name: "Icon = false", type: "boolean?", description: "Disable the style icon bubble.", default: "nil" },
+        { name: "AccentColor", type: "Color3 | '#RRGGBB'?", description: "Override the style accent color.", default: "style color" },
+        { name: "ProgressColor", type: "Color3 | '#RRGGBB'?", description: "Override the duration wipe color.", default: "AccentColor" },
+        { name: "ProgressTransparency", type: "number?", description: "Duration wipe transparency from 0 to 1.", default: "0.9" },
+        { name: "CanClose", type: "boolean?", description: "Show the close button.", default: "true" },
+        { name: "Duration", type: "number | false?", description: "Display duration in seconds. Use false or 0 to keep it open.", default: "5" },
     ]}
 />
 

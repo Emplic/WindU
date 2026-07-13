@@ -171,6 +171,7 @@ function Creator.SafeCallback(Function, ...)
 			return WindUI:Notify({
 				Title = "DEBUG Mode: Error",
 				Content = not i and Event or Event:sub(i + 1),
+				Style = "Error",
 				Duration = 8,
 			})
 		end

@@ -3,6 +3,52 @@ local Motion = require("../modules/Motion")
 local New = Creator.New
 local Tween = Creator.Tween
 
+local NOTIFICATION_STYLES = {
+	Info = {
+		Icon = "info",
+		Color = Color3.fromHex("#2F80ED"),
+	},
+	Notice = {
+		Icon = "bell",
+		Color = Color3.fromHex("#38BDF8"),
+	},
+	Success = {
+		Icon = "circle-check",
+		Color = Color3.fromHex("#22C55E"),
+	},
+	Warning = {
+		Icon = "triangle-alert",
+		Color = Color3.fromHex("#F59E0B"),
+	},
+	Error = {
+		Icon = "circle-x",
+		Color = Color3.fromHex("#EF4444"),
+	},
+	Neutral = {
+		Icon = "message-circle",
+		Color = Color3.fromHex("#71717A"),
+	},
+}
+
+local STYLE_ALIASES = {
+	default = "Info",
+	info = "Info",
+	notice = "Notice",
+	message = "Notice",
+	success = "Success",
+	successful = "Success",
+	ok = "Success",
+	green = "Success",
+	warn = "Warning",
+	warning = "Warning",
+	caution = "Warning",
+	error = "Error",
+	fail = "Error",
+	failed = "Error",
+	danger = "Error",
+	neutral = "Neutral",
+}
+
 local NotificationModule = {
 	Size = UDim2.new(0, 300, 1, -100 - 56),
 	SizeLower = UDim2.new(0, 300, 1, -56),
@@ -13,6 +59,63 @@ local NotificationModule = {
 	NotificationIndex = 0,
 	Notifications = {},
 }
+
+local function ResolveColor(Value, Fallback)
+	if typeof(Value) == "Color3" then
+		return Value
+	end
+
+	if typeof(Value) == "string" and string.sub(Value, 1, 1) == "#" then
+		local Success, Color = pcall(Color3.fromHex, Value)
+		if Success then
+			return Color
+		end
+	end
+
+	return Fallback
+end
+
+local function NormalizeStyleName(Value)
+	local Key = tostring(Value or "Info"):lower():gsub("%s+", "")
+	return STYLE_ALIASES[Key] or "Info"
+end
+
+local function ResolveDuration(Value)
+	if Value == false then
+		return false
+	end
+
+	local Number = tonumber(Value)
+	if Number == nil then
+		return 5
+	end
+
+	return math.max(Number, 0)
+end
+
+local function PaintIcon(Icon, Color, Transparency)
+	if typeof(Icon) ~= "Instance" then
+		return
+	end
+
+	local Targets = {}
+	if Icon:IsA("ImageLabel") or Icon:IsA("ImageButton") then
+		table.insert(Targets, Icon)
+	end
+
+	for _, Descendant in Icon:GetDescendants() do
+		if Descendant:IsA("ImageLabel") or Descendant:IsA("ImageButton") then
+			table.insert(Targets, Descendant)
+		end
+	end
+
+	for _, Target in Targets do
+		Target.ImageColor3 = Color
+		if Transparency ~= nil then
+			Target.ImageTransparency = Transparency
+		end
+	end
+end
 
 function NotificationModule.Init(Parent)
 	local NotModule = {
@@ -49,14 +152,29 @@ function NotificationModule.Init(Parent)
 end
 
 function NotificationModule.New(Config)
+	local StyleName = NormalizeStyleName(Config.Style or Config.Type or Config.Variant)
+	local Style = NOTIFICATION_STYLES[StyleName] or NOTIFICATION_STYLES.Info
+	local AccentColor = ResolveColor(Config.AccentColor or Config.Color, Style.Color)
+	local IconValue
+	if Config.Icon == false or Config.Icon == "" then
+		IconValue = nil
+	elseif Config.Icon ~= nil then
+		IconValue = Config.Icon
+	else
+		IconValue = Style.Icon
+	end
+
 	local Notification = {
 		Title = Config.Title or "Notification",
 		Content = Config.Content or nil,
-		Icon = Config.Icon or nil,
+		Icon = IconValue,
 		IconThemed = Config.IconThemed,
+		Style = StyleName,
+		AccentColor = AccentColor,
+		ProgressColor = ResolveColor(Config.ProgressColor, AccentColor),
 		Background = Config.Background,
 		BackgroundImageTransparency = Config.BackgroundImageTransparency,
-		Duration = Config.Duration or 5,
+		Duration = ResolveDuration(Config.Duration),
 		Buttons = Config.Buttons or {},
 		CanClose = Config.CanClose ~= false,
 		UIElements = {},
@@ -66,7 +184,8 @@ function NotificationModule.New(Config)
         Notification.CanClose = true
     end--]]
 	NotificationModule.NotificationIndex = NotificationModule.NotificationIndex + 1
-	NotificationModule.Notifications[NotificationModule.NotificationIndex] = Notification
+	Notification.Index = NotificationModule.NotificationIndex
+	NotificationModule.Notifications[Notification.Index] = Notification
 
 	-- local UIStroke = New("UIStroke", {
 	--     ThemeTag = {
@@ -79,6 +198,23 @@ function NotificationModule.New(Config)
 	local Icon
 
 	if Notification.Icon then
+		local IconBubble = Creator.NewRoundFrame(999, "Squircle", {
+			Name = "IconBubble",
+			Size = UDim2.new(0, 38, 0, 38),
+			Position = UDim2.new(0, 10, 0, 10),
+			ImageColor3 = Notification.AccentColor,
+			ImageTransparency = 0.12,
+		}, {
+			Creator.NewRoundFrame(999, "SquircleGlass", {
+				Size = UDim2.new(1, 1, 1, 1),
+				Position = UDim2.new(0.5, 0, 0.5, 0),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				ImageColor3 = Color3.new(1, 1, 1),
+				ImageTransparency = 0.87,
+			}),
+		})
+		Notification.UIElements.IconBubble = IconBubble
+
 		-- if Creator.Icon(Notification.Icon) and Creator.Icon(Notification.Icon)[2] then
 		--     Icon = New("ImageLabel", {
 		--         Size = UDim2.new(0,26,0,26),
@@ -108,8 +244,12 @@ function NotificationModule.New(Config)
 			"Notification",
 			Notification.IconThemed
 		)
-		Icon.Size = UDim2.new(0, 26, 0, 26)
-		Icon.Position = UDim2.new(0, NotificationModule.UIPadding, 0, NotificationModule.UIPadding)
+		Icon.Size = UDim2.new(0, 22, 0, 22)
+		Icon.Position = UDim2.new(0, 29, 0, 29)
+		Icon.AnchorPoint = Vector2.new(0.5, 0.5)
+		if Creator.Icon(Notification.Icon) and Notification.IconThemed ~= true then
+			PaintIcon(Icon, Color3.new(1, 1, 1), 0)
+		end
 		-- Icon.LayoutOrder = -1
 	end
 
@@ -140,15 +280,13 @@ function NotificationModule.New(Config)
 
 	local Duration = Creator.NewRoundFrame(NotificationModule.UICorner, "Squircle", {
 		Size = UDim2.new(0, 0, 1, 0),
-		ThemeTag = {
-			ImageTransparency = "NotificationDurationTransparency",
-			ImageColor3 = "NotificationDuration",
-		},
+		ImageColor3 = Notification.ProgressColor,
+		ImageTransparency = Creator.ClampTransparency(Config.ProgressTransparency, 0.9),
 		--Visible = false,
 	})
 
 	local TextContainer = New("Frame", {
-		Size = UDim2.new(1, Notification.Icon and -28 - NotificationModule.UIPadding or 0, 1, 0),
+		Size = UDim2.new(1, Notification.Icon and -52 or 0, 1, 0),
 		Position = UDim2.new(1, 0, 0, 0),
 		AnchorPoint = Vector2.new(1, 0),
 		BackgroundTransparency = 1,
@@ -254,10 +392,38 @@ function NotificationModule.New(Config)
 				CornerRadius = UDim.new(0, NotificationModule.UICorner),
 			}),
 		}),
+		Creator.NewRoundFrame(NotificationModule.UICorner, "Squircle", {
+			Name = "StyleWash",
+			Size = UDim2.new(1, 0, 1, 0),
+			ImageColor3 = Notification.AccentColor,
+			ImageTransparency = 0.9,
+		}, {
+			New("UIGradient", {
+				Rotation = 0,
+				Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 0.08),
+					NumberSequenceKeypoint.new(0.58, 0.74),
+					NumberSequenceKeypoint.new(1, 1),
+				}),
+			}),
+		}),
+		Creator.NewRoundFrame(999, "Squircle", {
+			Name = "Accent",
+			Size = UDim2.new(0, 4, 1, -20),
+			Position = UDim2.new(0, 8, 0, 10),
+			ImageColor3 = Notification.AccentColor,
+			ImageTransparency = 0.08,
+		}),
 
 		TextContainer,
+		Notification.UIElements.IconBubble,
 		Icon,
 		CloseButton,
+		New("UIStroke", {
+			Color = Notification.AccentColor,
+			Transparency = 0.66,
+			Thickness = 1,
+		}),
 	})
 
 	local MainContainer = New("Frame", {
@@ -288,6 +454,7 @@ function NotificationModule.New(Config)
 				"Close"
 			)
 			task.wait(Motion.GetDuration("NotificationClose") + 0.03)
+			NotificationModule.Notifications[Notification.Index] = nil
 			MainContainer:Destroy()
 		end
 	end
@@ -310,7 +477,7 @@ function NotificationModule.New(Config)
 			Enum.EasingDirection.Out,
 			"Open"
 		)
-		if Notification.Duration then
+		if typeof(Notification.Duration) == "number" and Notification.Duration > 0 then
 			Duration.Size = UDim2.new(0, Main.DurationFrame.AbsoluteSize.X, 1, 0)
 			Tween(
 				Main.DurationFrame.Frame,

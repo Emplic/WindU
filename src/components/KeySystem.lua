@@ -429,12 +429,13 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 		ExitButton.AnchorPoint = Vector2.new(0, 1)
 	end
 
-	local function NotifyKeySystem(Content, Icon)
+	local function NotifyKeySystem(Content, Icon, Style)
 		if Config.WindUI and Config.WindUI.Notify then
 			Config.WindUI:Notify({
 				Title = "Key System",
 				Content = Content,
 				Icon = Icon or "key",
+				Style = Style,
 			})
 		end
 	end
@@ -477,10 +478,10 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 
 		if CopyOk then
 			SetState("Key link copied", 0.36)
-			NotifyKeySystem("Key link copied to clipboard.", "key")
+			NotifyKeySystem("Key link copied to clipboard.", "key", "Success")
 		else
 			SetState("Copy unavailable", 0.08, true)
-			NotifyKeySystem(tostring(CopyResult or "Unable to copy key link."), "triangle-alert")
+			NotifyKeySystem(tostring(CopyResult or "Unable to copy key link."), "triangle-alert", "Warning")
 		end
 	end
 
@@ -489,10 +490,10 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 			local CopyOk, CopyResult = CopyRawLink(Config.KeySystem.URL)
 			if CopyOk then
 				SetState("Key link copied", 0.36)
-				NotifyKeySystem("Key link copied to clipboard.", "key")
+				NotifyKeySystem("Key link copied to clipboard.", "key", "Success")
 			else
 				SetState("Copy unavailable", 0.08, true)
-				NotifyKeySystem(tostring(CopyResult), "triangle-alert")
+				NotifyKeySystem(tostring(CopyResult), "triangle-alert", "Warning")
 			end
 		end, "Secondary", ButtonsContainer.Frame)
 	end
@@ -765,6 +766,7 @@ function KeySystem.new(Config, Filename, func, keyValidator)
 				Title = "Key System",
 				Content = Message or "Invalid key.",
 				Icon = "triangle-alert",
+				Style = "Error",
 			})
 		end
 

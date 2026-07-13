@@ -53,6 +53,7 @@ function Element:New(Config)
 					Title = "Error",
 					Content = "The " .. NewTitle .. " is not copied. Error: " .. result,
 					Icon = "x",
+					Style = "Error",
 					Duration = 5,
 				})
 			end

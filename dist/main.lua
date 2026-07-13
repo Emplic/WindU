@@ -817,6 +817,7 @@ warn("[ WindUI: DEBUG Mode ] "..x)
 return p:Notify{
 Title="DEBUG Mode: Error",
 Content=not A and x or x:sub(A+1),
+Style="Error",
 Duration=8,
 }
 end
@@ -2189,6 +2190,52 @@ local e=b.New
 local f=b.Tween
 
 local g={
+Info={
+Icon="info",
+Color=Color3.fromHex"#2F80ED",
+},
+Notice={
+Icon="bell",
+Color=Color3.fromHex"#38BDF8",
+},
+Success={
+Icon="circle-check",
+Color=Color3.fromHex"#22C55E",
+},
+Warning={
+Icon="triangle-alert",
+Color=Color3.fromHex"#F59E0B",
+},
+Error={
+Icon="circle-x",
+Color=Color3.fromHex"#EF4444",
+},
+Neutral={
+Icon="message-circle",
+Color=Color3.fromHex"#71717A",
+},
+}
+
+local h={
+default="Info",
+info="Info",
+notice="Notice",
+message="Notice",
+success="Success",
+successful="Success",
+ok="Success",
+green="Success",
+warn="Warning",
+warning="Warning",
+caution="Warning",
+error="Error",
+fail="Error",
+failed="Error",
+danger="Error",
+neutral="Neutral",
+}
+
+local i={
 Size=UDim2.new(0,300,1,-156),
 SizeLower=UDim2.new(0,300,1,-56),
 UICorner=18,
@@ -2199,21 +2246,78 @@ NotificationIndex=0,
 Notifications={},
 }
 
-function g.Init(h)
-local i={
+local function ResolveColor(l,m)
+if typeof(l)=="Color3"then
+return l
+end
+
+if typeof(l)=="string"and string.sub(l,1,1)=="#"then
+local p,r=pcall(Color3.fromHex,l)
+if p then
+return r
+end
+end
+
+return m
+end
+
+local function NormalizeStyleName(l)
+local m=tostring(l or"Info"):lower():gsub("%s+","")
+return h[m]or"Info"
+end
+
+local function ResolveDuration(l)
+if l==false then
+return false
+end
+
+local m=tonumber(l)
+if m==nil then
+return 5
+end
+
+return math.max(m,0)
+end
+
+local function PaintIcon(l,m,p)
+if typeof(l)~="Instance"then
+return
+end
+
+local r={}
+if l:IsA"ImageLabel"or l:IsA"ImageButton"then
+table.insert(r,l)
+end
+
+for u,v in l:GetDescendants()do
+if v:IsA"ImageLabel"or v:IsA"ImageButton"then
+table.insert(r,v)
+end
+end
+
+for u,v in r do
+v.ImageColor3=m
+if p~=nil then
+v.ImageTransparency=p
+end
+end
+end
+
+function i.Init(l)
+local m={
 Lower=false,
 }
 
-function i.SetLower(l)
-i.Lower=l
-i.Frame.Size=l and g.SizeLower or g.Size
+function m.SetLower(p)
+m.Lower=p
+m.Frame.Size=p and i.SizeLower or i.Size
 end
 
-i.Frame=e("Frame",{
+m.Frame=e("Frame",{
 Position=UDim2.new(1,-29,0,56),
 AnchorPoint=Vector2.new(1,0),
-Size=g.Size,
-Parent=h,
+Size=i.Size,
+Parent=l,
 BackgroundTransparency=1,
 
 
@@ -2230,28 +2334,44 @@ e("UIPadding",{
 PaddingBottom=UDim.new(0,29),
 }),
 })
-return i
+return m
 end
 
-function g.New(h)
-local i={
-Title=h.Title or"Notification",
-Content=h.Content or nil,
-Icon=h.Icon or nil,
-IconThemed=h.IconThemed,
-Background=h.Background,
-BackgroundImageTransparency=h.BackgroundImageTransparency,
-Duration=h.Duration or 5,
-Buttons=h.Buttons or{},
-CanClose=h.CanClose~=false,
+function i.New(l)
+local m=NormalizeStyleName(l.Style or l.Type or l.Variant)
+local p=g[m]or g.Info
+local r=ResolveColor(l.AccentColor or l.Color,p.Color)
+local u
+if l.Icon==false or l.Icon==""then
+u=nil
+elseif l.Icon~=nil then
+u=l.Icon
+else
+u=p.Icon
+end
+
+local v={
+Title=l.Title or"Notification",
+Content=l.Content or nil,
+Icon=u,
+IconThemed=l.IconThemed,
+Style=m,
+AccentColor=r,
+ProgressColor=ResolveColor(l.ProgressColor,r),
+Background=l.Background,
+BackgroundImageTransparency=l.BackgroundImageTransparency,
+Duration=ResolveDuration(l.Duration),
+Buttons=l.Buttons or{},
+CanClose=l.CanClose~=false,
 UIElements={},
 Closed=false,
 }
 
 
 
-g.NotificationIndex=g.NotificationIndex+1
-g.Notifications[g.NotificationIndex]=i
+i.NotificationIndex=i.NotificationIndex+1
+v.Index=i.NotificationIndex
+i.Notifications[v.Index]=v
 
 
 
@@ -2261,52 +2381,73 @@ g.Notifications[g.NotificationIndex]=i
 
 
 
-local l
+local x
 
-if i.Icon then
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+if v.Icon then
+local z=b.NewRoundFrame(999,"Squircle",{
+Name="IconBubble",
+Size=UDim2.new(0,38,0,38),
+Position=UDim2.new(0,10,0,10),
+ImageColor3=v.AccentColor,
+ImageTransparency=0.12,
+},{
+b.NewRoundFrame(999,"SquircleGlass",{
+Size=UDim2.new(1,1,1,1),
+Position=UDim2.new(0.5,0,0.5,0),
+AnchorPoint=Vector2.new(0.5,0.5),
+ImageColor3=Color3.new(1,1,1),
+ImageTransparency=0.87,
+}),
+})
+v.UIElements.IconBubble=z
 
 
 
-l=b.Image(
-i.Icon,
-i.Title..":"..i.Icon,
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+x=b.Image(
+v.Icon,
+v.Title..":"..v.Icon,
 0,
-h.Window,
+l.Window,
 "Notification",
-i.IconThemed
+v.IconThemed
 )
-l.Size=UDim2.new(0,26,0,26)
-l.Position=UDim2.new(0,g.UIPadding,0,g.UIPadding)
+x.Size=UDim2.new(0,22,0,22)
+x.Position=UDim2.new(0,29,0,29)
+x.AnchorPoint=Vector2.new(0.5,0.5)
+if b.Icon(v.Icon)and v.IconThemed~=true then
+PaintIcon(x,Color3.new(1,1,1),0)
+end
 
 end
 
-local m
-if i.CanClose then
-m=e("ImageButton",{
+local z
+if v.CanClose then
+z=e("ImageButton",{
 Image=b.Icon"x"[1],
 ImageRectSize=b.Icon"x"[2].ImageRectSize,
 ImageRectOffset=b.Icon"x"[2].ImageRectPosition,
 BackgroundTransparency=1,
 Size=UDim2.new(0,16,0,16),
-Position=UDim2.new(1,-g.UIPadding,0,g.UIPadding),
+Position=UDim2.new(1,-i.UIPadding,0,i.UIPadding),
 AnchorPoint=Vector2.new(1,0),
 ThemeTag={
 ImageColor3="Text",
@@ -2323,31 +2464,29 @@ Text="",
 })
 end
 
-local p=b.NewRoundFrame(g.UICorner,"Squircle",{
+local A=b.NewRoundFrame(i.UICorner,"Squircle",{
 Size=UDim2.new(0,0,1,0),
-ThemeTag={
-ImageTransparency="NotificationDurationTransparency",
-ImageColor3="NotificationDuration",
-},
+ImageColor3=v.ProgressColor,
+ImageTransparency=b.ClampTransparency(l.ProgressTransparency,0.9),
 
 })
 
-local r=e("Frame",{
-Size=UDim2.new(1,i.Icon and-28-g.UIPadding or 0,1,0),
+local B=e("Frame",{
+Size=UDim2.new(1,v.Icon and-52 or 0,1,0),
 Position=UDim2.new(1,0,0,0),
 AnchorPoint=Vector2.new(1,0),
 BackgroundTransparency=1,
 AutomaticSize="Y",
 },{
 e("UIPadding",{
-PaddingTop=UDim.new(0,g.UIPadding),
-PaddingLeft=UDim.new(0,g.UIPadding),
-PaddingRight=UDim.new(0,g.UIPadding),
-PaddingBottom=UDim.new(0,g.UIPadding),
+PaddingTop=UDim.new(0,i.UIPadding),
+PaddingLeft=UDim.new(0,i.UIPadding),
+PaddingRight=UDim.new(0,i.UIPadding),
+PaddingBottom=UDim.new(0,i.UIPadding),
 }),
 e("TextLabel",{
 AutomaticSize="Y",
-Size=UDim2.new(1,-30-g.UIPadding,0,0),
+Size=UDim2.new(1,-30-i.UIPadding,0,0),
 TextWrapped=true,
 TextXAlignment="Left",
 RichText=true,
@@ -2357,15 +2496,15 @@ ThemeTag={
 TextColor3="NotificationTitle",
 TextTransparency="NotificationTitleTransparency",
 },
-Text=i.Title,
+Text=v.Title,
 FontFace=Font.new(b.Font,Enum.FontWeight.SemiBold),
 }),
 e("UIListLayout",{
-Padding=UDim.new(0,g.UIPadding/3),
+Padding=UDim.new(0,i.UIPadding/3),
 }),
 })
 
-if i.Content then
+if v.Content then
 e("TextLabel",{
 AutomaticSize="Y",
 Size=UDim2.new(1,0,0,0),
@@ -2379,13 +2518,13 @@ ThemeTag={
 TextColor3="NotificationContent",
 TextTransparency="NotificationContentTransparency",
 },
-Text=i.Content,
+Text=v.Content,
 FontFace=Font.new(b.Font,Enum.FontWeight.Medium),
-Parent=r,
+Parent=B,
 })
 end
 
-local u=b.NewRoundFrame(g.UICorner,"Squircle",{
+local C=b.NewRoundFrame(i.UICorner,"Squircle",{
 Size=UDim2.new(1,0,0,0),
 Position=UDim2.new(2,0,1,0),
 AnchorPoint=Vector2.new(0,1),
@@ -2396,7 +2535,7 @@ ImageColor3="Notification",
 },
 
 },{
-b.NewRoundFrame(g.UICorner,"Squircle",{
+b.NewRoundFrame(i.UICorner,"Squircle",{
 Size=UDim2.new(1,0,1,0),
 ThemeTag={
 ImageColor3="Notification2",
@@ -2419,7 +2558,7 @@ Size=UDim2.new(1,0,1,0),
 BackgroundTransparency=1,
 ClipsDescendants=true,
 },{
-p,
+A,
 }),
 
 
@@ -2428,36 +2567,64 @@ p,
 }),
 e("ImageLabel",{
 Name="Background",
-Image=i.Background,
+Image=v.Background,
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,1,0),
 ScaleType="Crop",
-ImageTransparency=i.BackgroundImageTransparency,
+ImageTransparency=v.BackgroundImageTransparency,
 
 },{
 e("UICorner",{
-CornerRadius=UDim.new(0,g.UICorner),
+CornerRadius=UDim.new(0,i.UICorner),
 }),
+}),
+b.NewRoundFrame(i.UICorner,"Squircle",{
+Name="StyleWash",
+Size=UDim2.new(1,0,1,0),
+ImageColor3=v.AccentColor,
+ImageTransparency=0.9,
+},{
+e("UIGradient",{
+Rotation=0,
+Transparency=NumberSequence.new{
+NumberSequenceKeypoint.new(0,0.08),
+NumberSequenceKeypoint.new(0.58,0.74),
+NumberSequenceKeypoint.new(1,1),
+},
+}),
+}),
+b.NewRoundFrame(999,"Squircle",{
+Name="Accent",
+Size=UDim2.new(0,4,1,-20),
+Position=UDim2.new(0,8,0,10),
+ImageColor3=v.AccentColor,
+ImageTransparency=0.08,
 }),
 
-r,
-l,
-m,
+B,
+v.UIElements.IconBubble,
+x,
+z,
+e("UIStroke",{
+Color=v.AccentColor,
+Transparency=0.66,
+Thickness=1,
+}),
 })
 
-local v=e("Frame",{
+local F=e("Frame",{
 BackgroundTransparency=1,
 Size=UDim2.new(1,0,0,0),
-Parent=h.Holder,
+Parent=l.Holder,
 },{
-u,
+C,
 })
 
-function i.Close(x)
-if not i.Closed then
-i.Closed=true
+function v.Close(G)
+if not v.Closed then
+v.Closed=true
 d.Play(
-v,
+F,
 "NotificationClose",
 {Size=UDim2.new(1,0,0,-8)},
 Enum.EasingStyle.Quint,
@@ -2465,7 +2632,7 @@ Enum.EasingDirection.Out,
 "Close"
 )
 d.Play(
-u,
+C,
 "NotificationClose",
 {Position=UDim2.new(2,0,1,0)},
 Enum.EasingStyle.Quint,
@@ -2473,53 +2640,54 @@ Enum.EasingDirection.Out,
 "Close"
 )
 task.wait(d.GetDuration"NotificationClose"+0.03)
-v:Destroy()
+i.Notifications[v.Index]=nil
+F:Destroy()
 end
 end
 
 task.spawn(function()
 task.wait()
 d.Play(
-v,
+F,
 "Notification",
-{Size=UDim2.new(1,0,0,u.AbsoluteSize.Y)},
+{Size=UDim2.new(1,0,0,C.AbsoluteSize.Y)},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out,
 "Open"
 )
 d.Play(
-u,
+C,
 "Notification",
 {Position=UDim2.new(0,0,1,0)},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out,
 "Open"
 )
-if i.Duration then
-p.Size=UDim2.new(0,u.DurationFrame.AbsoluteSize.X,1,0)
+if typeof(v.Duration)=="number"and v.Duration>0 then
+A.Size=UDim2.new(0,C.DurationFrame.AbsoluteSize.X,1,0)
 f(
-u.DurationFrame.Frame,
-i.Duration,
+C.DurationFrame.Frame,
+v.Duration,
 {Size=UDim2.new(0,0,1,0)},
 Enum.EasingStyle.Linear,
 Enum.EasingDirection.InOut
 ):Play()
-task.wait(i.Duration)
-i:Close()
+task.wait(v.Duration)
+v:Close()
 end
 end)
 
-if m then
-b.AddSignal(m.TextButton.MouseButton1Click,function()
-i:Close()
+if z then
+b.AddSignal(z.TextButton.MouseButton1Click,function()
+v:Close()
 end)
 end
 
 
-return i
+return v
 end
 
-return g end function a.h()
+return i end function a.h()
 
 
 
@@ -3969,12 +4137,13 @@ u.Position=UDim2.new(0,10,1,-10)
 u.AnchorPoint=Vector2.new(0,1)
 end
 
-local function NotifyKeySystem(v,x)
+local function NotifyKeySystem(v,x,z)
 if ah.WindUI and ah.WindUI.Notify then
 ah.WindUI:Notify{
 Title="Key System",
 Content=v,
 Icon=x or"key",
+Style=z,
 }
 end
 end
@@ -4017,10 +4186,10 @@ end
 
 if z then
 SetState("Key link copied",0.36)
-NotifyKeySystem("Key link copied to clipboard.","key")
+NotifyKeySystem("Key link copied to clipboard.","key","Success")
 else
 SetState("Copy unavailable",0.08,true)
-NotifyKeySystem(tostring(A or"Unable to copy key link."),"triangle-alert")
+NotifyKeySystem(tostring(A or"Unable to copy key link."),"triangle-alert","Warning")
 end
 end
 
@@ -4029,10 +4198,10 @@ af("Get key","key",function()
 local v,x=CopyRawLink(ah.KeySystem.URL)
 if v then
 SetState("Key link copied",0.36)
-NotifyKeySystem("Key link copied to clipboard.","key")
+NotifyKeySystem("Key link copied to clipboard.","key","Success")
 else
 SetState("Copy unavailable",0.08,true)
-NotifyKeySystem(tostring(x),"triangle-alert")
+NotifyKeySystem(tostring(x),"triangle-alert","Warning")
 end
 end,"Secondary",p.Frame)
 end
@@ -4305,6 +4474,7 @@ ah.WindUI:Notify{
 Title="Key System",
 Content=z or"Invalid key.",
 Icon="triangle-alert",
+Style="Error",
 }
 end
 
@@ -7261,12 +7431,13 @@ local ap=ab.CurrentCamera
 return ap and ap.ViewportSize or Vector2.new(1280,720)
 end
 
-local function Notify(ap,aq,ar)
+local function Notify(ap,aq,ar,as)
 if ah.Notify then
 ah:Notify{
 Title=ap,
 Content=aq,
 Icon=ar,
+Style=as,
 }
 end
 end
@@ -7738,7 +7909,7 @@ end
 local l=CreateActionButton(g,"Save","save","Primary",function()
 local l=ag.ConfigManager
 if not l or typeof(l)~="table"then
-Notify("Config unavailable","Config save needs file access.","triangle-alert")
+Notify("Config unavailable","Config save needs file access.","triangle-alert","Warning")
 return
 end
 
@@ -7751,9 +7922,9 @@ end)
 
 if p and r then
 RefreshConfigMeta()
-Notify("Config saved","Saved '"..m.."'.","check")
+Notify("Config saved","Saved '"..m.."'.","check","Success")
 else
-Notify("Config save failed",tostring(u or r),"triangle-alert")
+Notify("Config save failed",tostring(u or r),"triangle-alert","Error")
 end
 end)
 l.Size=UDim2.new(0.5,-4,1,0)
@@ -7761,7 +7932,7 @@ l.Size=UDim2.new(0.5,-4,1,0)
 local m=CreateActionButton(g,"Load","download","Secondary",function()
 local m=ag.ConfigManager
 if not m or typeof(m)~="table"then
-Notify("Config unavailable","Config load needs file access.","triangle-alert")
+Notify("Config unavailable","Config load needs file access.","triangle-alert","Warning")
 return
 end
 
@@ -7777,9 +7948,9 @@ end)
 
 if r and u then
 i.Text="Theme: "..tostring(ah:GetCurrentTheme())
-Notify("Config loaded","Loaded '"..p.."'.","refresh-cw")
+Notify("Config loaded","Loaded '"..p.."'.","refresh-cw","Success")
 else
-Notify("Config load failed",tostring(v or u),"triangle-alert")
+Notify("Config load failed",tostring(v or u),"triangle-alert","Error")
 end
 end)
 m.Size=UDim2.new(0.5,-4,1,0)
@@ -8108,12 +8279,13 @@ TargetPosition=nil,
 UIElements={},
 }
 
-local function Notify(as,at,au)
+local function Notify(as,at,au,av)
 if ah.Notify then
 ah:Notify{
 Title=as,
 Content=at,
 Icon=au,
+Style=av,
 }
 end
 end
@@ -8672,7 +8844,7 @@ local v,x=NormalizeKey(r)
 ag:SetToggleKey(x)
 f.Text=v
 if not u then
-Notify("Keybind updated",x and("Toggle key: "..v)or"Toggle key cleared.","keyboard")
+Notify("Keybind updated",x and("Toggle key: "..v)or"Toggle key cleared.","keyboard","Success")
 end
 end
 
@@ -14262,6 +14434,7 @@ al.WindUI:Notify{
 Title="Error",
 Content="The "..ao.." is not copied. Error: "..aq,
 Icon="x",
+Style="Error",
 Duration=5,
 }
 end
@@ -18542,12 +18715,13 @@ end
 return false
 end
 
-local function Notify(ao,ap,aq,ar)
+local function Notify(ao,ap,aq,ar,as)
 if ao and ao.Notify then
 ao:Notify{
 Title=ap,
 Content=aq,
 Icon=ar,
+Style=as,
 }
 end
 end
@@ -18794,10 +18968,10 @@ end
 
 local function CopyInvite(aA)
 if CopyText(as.Url)then
-Notify(ap.WindUI,aA or"Discord link copied",as.Url,"check")
+Notify(ap.WindUI,aA or"Discord link copied",as.Url,"check","Success")
 return true
 else
-Notify(ap.WindUI,"Discord invite",as.Url,"link")
+Notify(ap.WindUI,"Discord invite",as.Url,"link","Warning")
 return false
 end
 end
@@ -19215,71 +19389,89 @@ Vector2.new(0.72,0.24),
 Vector2.new(0.92,0.42),
 }
 
-local function NormalizePoint(an)
-if typeof(an)=="Vector2"then
-return Vector2.new(math.clamp(an.X,0,1),math.clamp(an.Y,0,1))
+local an=92
+local ao=22
+
+local function NormalizePoint(ap)
+if typeof(ap)=="Vector2"then
+return Vector2.new(math.clamp(ap.X,0,1),math.clamp(ap.Y,0,1))
 end
 
-if typeof(an)=="table"then
-local ao=ak.ToFiniteNumber(an.X or an.x or an[1])or 0
-local ap=ak.ToFiniteNumber(an.Y or an.y or an[2])or 0
-return Vector2.new(math.clamp(ao,0,1),math.clamp(ap,0,1))
+if typeof(ap)=="table"then
+local aq=ak.ToFiniteNumber(ap.X or ap.x or ap[1])or 0
+local ar=ak.ToFiniteNumber(ap.Y or ap.y or ap[2])or 0
+return Vector2.new(math.clamp(aq,0,1),math.clamp(ar,0,1))
 end
 
 return Vector2.new(0,0)
 end
 
-local function NormalizePoints(an)
-local ao={}
-for ap,aq in next,an or am do
-table.insert(ao,NormalizePoint(aq))
+local function NormalizePoints(ap)
+local aq={}
+local ar=typeof(ap)=="table"and ap or am
+
+if#ar>0 then
+for as=1,#ar do
+table.insert(aq,NormalizePoint(ar[as]))
+end
+else
+for as,at in next,ar do
+table.insert(aq,NormalizePoint(at))
+end
 end
 
-if#ao<2 then
-ao=am
+if#aq<2 then
+aq=am
 end
 
-return ao
+return aq
 end
 
-local function PointToUDim2(an)
-return UDim2.new(an.X,0,an.Y,0)
+local function PointToUDim2(ap)
+return UDim2.new(ap.X,0,ap.Y,0)
 end
 
-local function PixelToUDim2(an)
-return UDim2.fromOffset(an.X,an.Y)
+local function PixelToUDim2(ap)
+return UDim2.fromOffset(ap.X,ap.Y)
 end
 
-local function GetAngle(an,ao)
+local function GetTweenPoint(ap,aq,ar)
+return ap:Lerp(aq,math.clamp(ar,0,1))
+end
+
+local function GetAngle(ap,aq)
 if math.atan2 then
-return math.atan2(an,ao)
+return math.atan2(ap,aq)
 end
 
-if ao==0 then
-return an>=0 and math.pi/2 or-math.pi/2
+if aq==0 then
+return ap>=0 and math.pi/2 or-math.pi/2
 end
 
-local ap=math.atan(an/ao)
-if ao<0 then
-ap+=math.pi
+local ar=math.atan(ap/aq)
+if aq<0 then
+ar+=math.pi
 end
-return ap
+return ar
 end
 
-function al.New(an,ao)
-local ap={
+function al.New(ap,aq)
+local ar={
 __type="Path2D",
-Title=ao.Title or"Path 2D",
-Desc=ao.Desc,
-Points=NormalizePoints(ao.Points or ao.Path),
-Labels=ao.Labels or{},
-Height=math.max(ak.ToFiniteNumber(ao.Height)or 156,96),
-Thickness=math.max(ak.ToFiniteNumber(ao.Thickness)or 4,2),
-Padding=math.max(ak.ToFiniteNumber(ao.PathPadding or ao.Padding)or 20,0),
-Duration=math.max(ak.ToFiniteNumber(ao.Duration)or 1.2,0.18),
-StepDelay=math.max(ak.ToFiniteNumber(ao.StepDelay)or 0.055,0),
-Loop=ao.Loop==true,
-AutoPlay=ao.AutoPlay~=false,
+Title=aq.Title or"Path 2D",
+Desc=aq.Desc,
+Points=NormalizePoints(aq.Points or aq.Path),
+Labels=aq.Labels or{},
+Height=math.max(ak.ToFiniteNumber(aq.Height)or 156,96),
+Thickness=math.max(ak.ToFiniteNumber(aq.Thickness)or 4,2),
+Padding=math.max(ak.ToFiniteNumber(aq.PathPadding or aq.Padding)or 20,0),
+DotSize=math.max(ak.ToFiniteNumber(aq.DotSize)or 9,5),
+MarkerSize=math.max(ak.ToFiniteNumber(aq.MarkerSize)or 16,10),
+Duration=math.max(ak.ToFiniteNumber(aq.Duration)or 1.2,0.18),
+StepDelay=math.max(ak.ToFiniteNumber(aq.StepDelay)or 0.055,0),
+Loop=aq.Loop==true,
+AutoPlay=aq.AutoPlay~=false,
+Glow=aq.Glow~=false,
 UIElements={},
 Segments={},
 Dots={},
@@ -19289,26 +19481,26 @@ HasRendered=false,
 Destroyed=false,
 }
 
-ap.Path2DFrame=a.load'I'{
-Title=ap.Title,
-Desc=ap.Desc,
-Parent=ao.Parent,
+ar.Path2DFrame=a.load'I'{
+Title=ar.Title,
+Desc=ar.Desc,
+Parent=aq.Parent,
 TextOffset=0,
-Hover=ao.Hover==true,
-Tab=ao.Tab,
-Index=ao.Index,
-Window=ao.Window,
-ElementTable=ap,
-ParentConfig=ao,
-Tags=ao.Tags,
+Hover=aq.Hover==true,
+Tab=aq.Tab,
+Index=aq.Index,
+Window=aq.Window,
+ElementTable=ar,
+ParentConfig=aq,
+Tags=aq.Tags,
 }
 
-ap.UIElements.Canvas=aa.NewRoundFrame(ao.Window.ElementConfig.UICorner,"Squircle",{
+ar.UIElements.Canvas=aa.NewRoundFrame(aq.Window.ElementConfig.UICorner,"Squircle",{
 Name="Path2DCanvas",
-Size=UDim2.new(1,0,0,ap.Height),
+Size=UDim2.new(1,0,0,ar.Height),
 ClipsDescendants=true,
-ImageTransparency=0.93,
-Parent=ap.Path2DFrame.UIElements.Container,
+ImageTransparency=aa.ClampTransparency(aq.BackgroundTransparency,0.92),
+Parent=ar.Path2DFrame.UIElements.Container,
 ThemeTag={
 ImageColor3="Path2DBackground",
 },
@@ -19323,201 +19515,280 @@ NumberSequenceKeypoint.new(1,0.28),
 })
 
 local function ClearObjects()
-for aq,ar in next,ap.Segments do
-ar.Track:Destroy()
+for as,at in next,ar.Segments do
+at.Track:Destroy()
 end
-for aq,ar in next,ap.Dots do
-ar:Destroy()
+for as,at in next,ar.Dots do
+at:Destroy()
 end
-for aq,ar in next,ap.LabelObjects do
-ar:Destroy()
+for as,at in next,ar.LabelObjects do
+at:Destroy()
+end
+if ar.UIElements.Marker then
+ar.UIElements.Marker:Destroy()
+ar.UIElements.Marker=nil
 end
 
-ap.Segments={}
-ap.Dots={}
-ap.LabelObjects={}
+ar.Segments={}
+ar.Dots={}
+ar.LabelObjects={}
 end
 
 local function GetCanvasSize()
-local aq=ap.UIElements.Canvas.AbsoluteSize
-return Vector2.new(aq.X/ao.UIScale,aq.Y/ao.UIScale)
+local as=ar.UIElements.Canvas.AbsoluteSize
+return Vector2.new(as.X/aq.UIScale,as.Y/aq.UIScale)
 end
 
-local function GetPixelPoint(aq,ar)
-local as=math.min(ap.Padding,math.max(ar.X,ar.Y)/3)
-local at=Vector2.new(
-math.max(ar.X-(as*2),1),
-math.max(ar.Y-(as*2),1)
+local function GetPixelPoint(as,at)
+local au=math.min(ar.Padding,math.max(at.X,at.Y)/3)
+local av=Vector2.new(
+math.max(at.X-(au*2),1),
+math.max(at.Y-(au*2),1)
 )
 
 return Vector2.new(
-as+(aq.X*at.X),
-as+(aq.Y*at.Y)
+au+(as.X*av.X),
+au+(as.Y*av.Y)
 )
 end
 
-function ap.Render(aq,ar)
-local as=GetCanvasSize()
-if as.X<=0 or as.Y<=0 then
+local function GetLabelPosition(as,at,au)
+local av=math.max(ak.ToFiniteNumber(au.Width)or an,54)
+local aw=math.max(ak.ToFiniteNumber(au.Height)or ao,18)
+local ax=ak.ToFiniteNumber(au.OffsetX)or 0
+local ay=ak.ToFiniteNumber(au.OffsetY)
+if ay==nil then
+ay=au.Above==false and 18 or-18
+end
+
+return Vector2.new(
+math.clamp(as.X+ax,(av/2)+6,math.max((av/2)+6,at.X-(av/2)-6)),
+math.clamp(as.Y+ay,(aw/2)+6,math.max((aw/2)+6,at.Y-(aw/2)-6))
+),av,aw
+end
+
+function ar.Render(as,at)
+local au=GetCanvasSize()
+if au.X<=0 or au.Y<=0 then
 return
 end
 
-local at=ar~=false and ap.AutoPlay
-ap.PlayToken=ap.PlayToken+1
-ap.HasRendered=true
+local av=at~=false and ar.AutoPlay
+ar.PlayToken=ar.PlayToken+1
+ar.HasRendered=true
 ClearObjects()
 
-for au,av in next,ap.Points do
-local aw=GetPixelPoint(av,as)
-local ax=aa.NewRoundFrame(999,"Circle",{
-Name="Point"..tostring(au),
-Size=UDim2.new(0,au==1 and 12 or 9,0,au==1 and 12 or 9),
-Position=PixelToUDim2(aw),
-AnchorPoint=Vector2.new(0.5,0.5),
-ImageTransparency=at and 0.35 or 0.16,
-Parent=ap.UIElements.Canvas,
-ThemeTag={
-ImageColor3=au==#ap.Points and"Path2DMarker"or"Path2DLine",
-},
-})
-table.insert(ap.Dots,ax)
-end
+for aw=1,#ar.Points-1 do
+local ax=GetPixelPoint(ar.Points[aw],au)
+local ay=GetPixelPoint(ar.Points[aw+1],au)
+local az=ay-ax
+local aA=az.Magnitude
+local aB=math.deg(GetAngle(az.Y,az.X))
+local b=(ax+ay)/2
 
-for au=1,#ap.Points-1 do
-local av=GetPixelPoint(ap.Points[au],as)
-local aw=GetPixelPoint(ap.Points[au+1],as)
-local ax=aw-av
-local ay=ax.Magnitude
-local az=math.deg(GetAngle(ax.Y,ax.X))
-local aA=(av+aw)/2
-
-local aB=aa.NewRoundFrame(999,"Squircle",{
-Name="Segment"..tostring(au),
-Size=UDim2.new(0,ay,0,ap.Thickness),
-Position=PixelToUDim2(aA),
+local d=aa.NewRoundFrame(999,"Squircle",{
+Name="Segment"..tostring(aw),
+Size=UDim2.new(0,aA,0,ar.Thickness),
+Position=PixelToUDim2(b),
 AnchorPoint=Vector2.new(0.5,0.5),
-Rotation=az,
+Rotation=aB,
 ImageTransparency=0.84,
-Parent=ap.UIElements.Canvas,
+Parent=ar.UIElements.Canvas,
+ZIndex=2,
 ThemeTag={
 ImageColor3="Path2DTrack",
 },
 })
 
-local b=aa.NewRoundFrame(999,"Squircle",{
+local f=ar.Glow and aa.NewRoundFrame(999,"Squircle",{
+Name="Glow",
+Size=UDim2.new(0,av and 0 or aA,0,ar.Thickness+8),
+Position=UDim2.new(0,0,0.5,0),
+AnchorPoint=Vector2.new(0,0.5),
+ImageTransparency=0.84,
+ZIndex=2,
+Parent=d,
+ThemeTag={
+ImageColor3="Path2DLine",
+},
+})or nil
+
+local g=aa.NewRoundFrame(999,"Squircle",{
 Name="Fill",
-Size=UDim2.new(0,at and 0 or ay,1,0),
+Size=UDim2.new(0,av and 0 or aA,1,0),
 ImageTransparency=0,
-Parent=aB,
+ZIndex=3,
+Parent=d,
 ThemeTag={
 ImageColor3="Path2DLine",
 },
 })
 
-table.insert(ap.Segments,{
-Track=aB,
-Fill=b,
-Length=ay,
-From=ap.Points[au],
-To=ap.Points[au+1],
-FromPosition=PixelToUDim2(av),
-ToPosition=PixelToUDim2(aw),
+table.insert(ar.Segments,{
+Track=d,
+Glow=f,
+Fill=g,
+Length=aA,
+From=ar.Points[aw],
+To=ar.Points[aw+1],
+FromPixel=ax,
+ToPixel=ay,
+FromPosition=PixelToUDim2(ax),
+ToPosition=PixelToUDim2(ay),
 })
 end
 
-for au,av in next,ap.Labels do
-if typeof(av)~="table"then
-av={
-Text=tostring(av),
+for aw=1,#ar.Points do
+local ax=ar.Points[aw]
+local ay=GetPixelPoint(ax,au)
+local az=aw==1 and ar.DotSize+3 or ar.DotSize
+local aA=aa.NewRoundFrame(999,"Circle",{
+Name="Point"..tostring(aw),
+Size=UDim2.new(0,az,0,az),
+Position=PixelToUDim2(ay),
+AnchorPoint=Vector2.new(0.5,0.5),
+ImageTransparency=av and 0.54 or 0.12,
+Parent=ar.UIElements.Canvas,
+ZIndex=4,
+ThemeTag={
+ImageColor3=aw==#ar.Points and"Path2DMarker"or"Path2DLine",
+},
+},{
+aa.NewRoundFrame(999,"Circle",{
+Name="DotCore",
+Size=UDim2.new(0,math.max(az-5,3),0,math.max(az-5,3)),
+Position=UDim2.new(0.5,0,0.5,0),
+AnchorPoint=Vector2.new(0.5,0.5),
+ImageColor3=Color3.new(1,1,1),
+ImageTransparency=0.22,
+ZIndex=5,
+}),
+})
+table.insert(ar.Dots,aA)
+end
+
+for aw,ax in next,ar.Labels do
+if typeof(ax)~="table"then
+ax={
+Text=tostring(ax),
 }
 end
-local aw=math.clamp(math.floor(ak.ToFiniteNumber(av.Point or av.Index)or 1),1,#ap.Points)
-local ax=GetPixelPoint(ap.Points[aw],as)
-local ay=ai("TextLabel",{
+local ay=math.clamp(math.floor(ak.ToFiniteNumber(ax.Point or ax.Index)or 1),1,#ar.Points)
+local az=GetPixelPoint(ar.Points[ay],au)
+local aA,aB,b=GetLabelPosition(az,au,ax)
+local d=ai("TextLabel",{
 Name="PathLabel",
-Size=UDim2.new(0,86,0,20),
-Position=PixelToUDim2(ax),
-AnchorPoint=Vector2.new(0.5,av.Above==false and 0 or 1),
+Size=UDim2.new(0,aB,0,b),
+Position=PixelToUDim2(aA),
+AnchorPoint=Vector2.new(0.5,0.5),
 BackgroundTransparency=1,
-Text=tostring(av.Text or av.Title or aw),
+Text=tostring(ax.Text or ax.Title or ay),
 TextSize=12,
 TextTransparency=0.22,
 TextXAlignment="Center",
 FontFace=Font.new(aa.Font,Enum.FontWeight.SemiBold),
-Parent=ap.UIElements.Canvas,
+Parent=ar.UIElements.Canvas,
+ZIndex=6,
 ThemeTag={
 TextColor3="Path2DLabel",
 },
 })
-table.insert(ap.LabelObjects,ay)
+table.insert(ar.LabelObjects,d)
 end
 
-local au=aa.NewRoundFrame(999,"Circle",{
+local aw=aa.NewRoundFrame(999,"Circle",{
 Name="Marker",
-Size=UDim2.new(0,16,0,16),
-Position=at and ap.Segments[1]and ap.Segments[1].FromPosition
-or PixelToUDim2(GetPixelPoint(ap.Points[#ap.Points],as)),
+Size=UDim2.new(0,ar.MarkerSize,0,ar.MarkerSize),
+Position=av and ar.Segments[1]and ar.Segments[1].FromPosition
+or PixelToUDim2(GetPixelPoint(ar.Points[#ar.Points],au)),
 AnchorPoint=Vector2.new(0.5,0.5),
 ImageTransparency=0,
-Parent=ap.UIElements.Canvas,
+Parent=ar.UIElements.Canvas,
+ZIndex=8,
 ThemeTag={
 ImageColor3="Path2DMarker",
 },
 },{
+aa.NewRoundFrame(999,"Circle",{
+Name="Halo",
+Size=UDim2.new(1,12,1,12),
+Position=UDim2.new(0.5,0,0.5,0),
+AnchorPoint=Vector2.new(0.5,0.5),
+ImageTransparency=0.78,
+ZIndex=7,
+ThemeTag={
+ImageColor3="Path2DMarker",
+},
+}),
 aa.NewRoundFrame(999,"Circle",{
 Name="Core",
 Size=UDim2.new(0,6,0,6),
 Position=UDim2.new(0.5,0,0.5,0),
 AnchorPoint=Vector2.new(0.5,0.5),
 ImageColor3=Color3.new(1,1,1),
+ZIndex=9,
 }),
 })
-ap.UIElements.Marker=au
+ar.UIElements.Marker=aw
 
-if at then
-ap:Play()
+if av then
+ar:Play()
 end
-end
-
-function ap.Play(aq)
-ap.PlayToken=ap.PlayToken+1
-local ar=ap.PlayToken
-local as=ap.Duration/math.max(#ap.Segments,1)
-
-if ap.UIElements.Marker then
-ap.UIElements.Marker.Position=ap.Segments[1]and ap.Segments[1].FromPosition
-or PointToUDim2(ap.Points[1])
-end
-for at,au in next,ap.Dots do
-au.ImageTransparency=0.72
-end
-for at,au in next,ap.Segments do
-au.Fill.Size=UDim2.new(0,0,1,0)
 end
 
-for at,au in next,ap.Segments do
-local av=(at-1)*(as+ap.StepDelay)
-task.delay(av,function()
-if ar~=ap.PlayToken or ap.Destroyed then
+function ar.Play(as)
+ar.PlayToken=ar.PlayToken+1
+local at=ar.PlayToken
+local au=ar.Duration/math.max(#ar.Segments,1)
+
+if ar.UIElements.Marker then
+ar.UIElements.Marker.Position=ar.Segments[1]and ar.Segments[1].FromPosition
+or PointToUDim2(ar.Points[1])
+end
+for av,aw in next,ar.Dots do
+aw.ImageTransparency=0.72
+end
+for av,aw in next,ar.Segments do
+aw.Fill.Size=UDim2.new(0,0,1,0)
+if aw.Glow then
+aw.Glow.Size=UDim2.new(0,0,0,ar.Thickness+8)
+end
+end
+
+for av=1,#ar.Segments do
+local aw=ar.Segments[av]
+local ax=(av-1)*(au+ar.StepDelay)
+task.delay(ax,function()
+if at~=ar.PlayToken or ar.Destroyed then
 return
 end
 
-if ap.Dots[at]then
-af.Play(ap.Dots[at],"Reveal",{ImageTransparency=0.12},nil,nil,"Point")
+if ar.Dots[av]then
+af.Play(ar.Dots[av],"Reveal",{ImageTransparency=0.12},nil,nil,"Point")
 end
 af.Play(
-au.Fill,
-as,
-{Size=UDim2.new(0,au.Length,1,0)},
+aw.Fill,
+au,
+{Size=UDim2.new(0,aw.Length,1,0)},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out,
 "Draw"
 )
-if ap.UIElements.Marker then
+if aw.Glow then
 af.Play(
-ap.UIElements.Marker,
-as,
-{Position=au.ToPosition},
+aw.Glow,
+au,
+{Size=UDim2.new(0,aw.Length,0,ar.Thickness+8)},
+Enum.EasingStyle.Quint,
+Enum.EasingDirection.Out,
+"Glow"
+)
+end
+if ar.UIElements.Marker then
+af.Play(
+ar.UIElements.Marker,
+au,
+{Position=aw.ToPosition},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out,
 "Path"
@@ -19526,55 +19797,94 @@ end
 end)
 end
 
-local at=#ap.Segments*(as+ap.StepDelay)
-task.delay(at,function()
-if ar~=ap.PlayToken or ap.Destroyed then
+local av=#ar.Segments*(au+ar.StepDelay)
+task.delay(av,function()
+if at~=ar.PlayToken or ar.Destroyed then
 return
 end
-if ap.Dots[#ap.Dots]then
-af.Play(ap.Dots[#ap.Dots],"Reveal",{ImageTransparency=0},nil,nil,"Point")
+if ar.Dots[#ar.Dots]then
+af.Play(ar.Dots[#ar.Dots],"Reveal",{ImageTransparency=0},nil,nil,"Point")
 end
-if ap.Loop then
+if ar.Loop then
 task.delay(0.4,function()
-if ar==ap.PlayToken and not ap.Destroyed then
-ap:Play()
+if at==ar.PlayToken and not ar.Destroyed then
+ar:Play()
 end
 end)
 end
 end)
 end
 
-function ap.Stop(aq)
-ap.PlayToken=ap.PlayToken+1
-if ap.UIElements.Marker then
-af.Cancel(ap.UIElements.Marker,"Path")
+function ar.Stop(as)
+ar.PlayToken=ar.PlayToken+1
+if ar.UIElements.Marker then
+af.Cancel(ar.UIElements.Marker,"Path")
 end
-for ar,as in next,ap.Segments do
-af.Cancel(as.Fill,"Draw")
+for at,au in next,ar.Segments do
+af.Cancel(au.Fill,"Draw")
+if au.Glow then
+af.Cancel(au.Glow,"Glow")
+end
+end
+end
+
+function ar.SetProgress(as,at)
+ar:Stop()
+local au=math.clamp(ak.ToFiniteNumber(at)or 0,0,1)
+if#ar.Segments==0 then
+return au
+end
+
+local av=math.max(#ar.Segments,1)
+local aw=au*av
+
+for ax=1,#ar.Segments do
+local ay=ar.Segments[ax]
+local az=math.clamp(aw-(ax-1),0,1)
+ay.Fill.Size=UDim2.new(0,ay.Length*az,1,0)
+if ay.Glow then
+ay.Glow.Size=UDim2.new(0,ay.Length*az,0,ar.Thickness+8)
 end
 end
 
-function ap.SetPoints(aq,ar)
-ap.Points=NormalizePoints(ar)
-ap:Render(true)
-return ap.Points
+local ax=math.clamp(math.ceil(aw),1,#ar.Segments)
+local ay=ar.Segments[ax]
+if ay and ar.UIElements.Marker then
+local az=math.clamp(aw-(ax-1),0,1)
+ar.UIElements.Marker.Position=PixelToUDim2(
+GetTweenPoint(ay.FromPixel,ay.ToPixel,az)
+)
 end
 
-function ap.Destroy(aq)
-ap.Destroyed=true
-ap:Stop()
-ap.Path2DFrame:Destroy()
+for az=1,#ar.Dots do
+local aA=ar.Dots[az]
+aA.ImageTransparency=az<=math.floor(aw)+1 and 0.12 or 0.54
 end
 
-aa.AddSignal(ap.UIElements.Canvas:GetPropertyChangedSignal"AbsoluteSize",function()
-ap:Render(not ap.HasRendered)
+return au
+end
+
+function ar.SetPoints(as,at)
+ar.Points=NormalizePoints(at)
+ar:Render(true)
+return ar.Points
+end
+
+function ar.Destroy(as)
+ar.Destroyed=true
+ar:Stop()
+ar.Path2DFrame:Destroy()
+end
+
+aa.AddSignal(ar.UIElements.Canvas:GetPropertyChangedSignal"AbsoluteSize",function()
+ar:Render(not ar.HasRendered)
 end)
 
 task.defer(function()
-ap:Render(true)
+ar:Render(true)
 end)
 
-return ap.__type,ap
+return ar.__type,ar
 end
 
 return al end function a.at()

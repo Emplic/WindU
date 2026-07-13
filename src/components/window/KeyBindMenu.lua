@@ -51,12 +51,13 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		UIElements = {},
 	}
 
-	local function Notify(Title, Content, Icon)
+	local function Notify(Title, Content, Icon, Style)
 		if WindUI.Notify then
 			WindUI:Notify({
 				Title = Title,
 				Content = Content,
 				Icon = Icon,
+				Style = Style,
 			})
 		end
 	end
@@ -615,7 +616,7 @@ function KeyBindMenu.New(Window, WindUI, Config)
 		Window:SetToggleKey(EnumKey)
 		CurrentKey.Text = Name
 		if not Silent then
-			Notify("Keybind updated", EnumKey and ("Toggle key: " .. Name) or "Toggle key cleared.", "keyboard")
+			Notify("Keybind updated", EnumKey and ("Toggle key: " .. Name) or "Toggle key cleared.", "keyboard", "Success")
 		end
 	end
 

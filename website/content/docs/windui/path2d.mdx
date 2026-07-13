@@ -36,6 +36,9 @@ local Route = Tab:Path2D({
     Height = 170,
     PathPadding = 22,
     Thickness = 5,
+    DotSize = 9,
+    MarkerSize = 16,
+    Glow = true,
     Duration = 1.4,
     StepDelay = 0.04,
     Loop = true,
@@ -66,6 +69,10 @@ local Route = Tab:Path2D({
         { name: "Height", type: "number?", description: "Canvas height.", default: "156" },
         { name: "PathPadding", type: "number?", description: "Inner canvas padding that keeps rotated lines, dots and labels away from clipped edges.", default: "20" },
         { name: "Thickness", type: "number?", description: "Line thickness.", default: "4" },
+        { name: "DotSize", type: "number?", description: "Point dot size.", default: "9" },
+        { name: "MarkerSize", type: "number?", description: "Moving marker size.", default: "16" },
+        { name: "Glow", type: "boolean?", description: "Enable the soft active-line glow.", default: "true" },
+        { name: "BackgroundTransparency", type: "number?", description: "Canvas background transparency.", default: "0.92" },
         { name: "Duration", type: "number?", description: "Total draw duration.", default: "1.2" },
         { name: "StepDelay", type: "number?", description: "Delay between segments.", default: "0.055" },
         { name: "Loop", type: "boolean?", description: "Replay after finishing.", default: "false" },
@@ -79,6 +86,7 @@ local Route = Tab:Path2D({
     type={{
         ':Play': { type: 'function', description: 'Replay the path animation.', args: {} },
         ':Stop': { type: 'function', description: 'Cancel active path tweens.', args: {} },
+        ':SetProgress': { type: 'function', description: 'Set the rendered path progress from 0 to 1 without replaying.', args: { Progress: { type: 'number' } } },
         ':SetPoints': { type: 'function', description: 'Replace points and render again.', args: { Points: { type: 'table' } } },
         ':Destroy': { type: 'function', description: 'Remove the element.', args: {} },
     }}

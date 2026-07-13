@@ -79,12 +79,13 @@ function SettingsMenu.New(Window, WindUI, Config)
 		return Camera and Camera.ViewportSize or Vector2.new(1280, 720)
 	end
 
-	local function Notify(Title, Content, Icon)
+	local function Notify(Title, Content, Icon, Style)
 		if WindUI.Notify then
 			WindUI:Notify({
 				Title = Title,
 				Content = Content,
 				Icon = Icon,
+				Style = Style,
 			})
 		end
 	end
@@ -556,7 +557,7 @@ function SettingsMenu.New(Window, WindUI, Config)
 	local SaveButton = CreateActionButton(ConfigActions, "Save", "save", "Primary", function()
 		local Manager = Window.ConfigManager
 		if not Manager or typeof(Manager) ~= "table" then
-			Notify("Config unavailable", "Config save needs file access.", "triangle-alert")
+			Notify("Config unavailable", "Config save needs file access.", "triangle-alert", "Warning")
 			return
 		end
 
@@ -569,9 +570,9 @@ function SettingsMenu.New(Window, WindUI, Config)
 
 		if Success and Result then
 			RefreshConfigMeta()
-			Notify("Config saved", "Saved '" .. Name .. "'.", "check")
+			Notify("Config saved", "Saved '" .. Name .. "'.", "check", "Success")
 		else
-			Notify("Config save failed", tostring(Message or Result), "triangle-alert")
+			Notify("Config save failed", tostring(Message or Result), "triangle-alert", "Error")
 		end
 	end)
 	SaveButton.Size = UDim2.new(0.5, -4, 1, 0)
@@ -579,7 +580,7 @@ function SettingsMenu.New(Window, WindUI, Config)
 	local LoadButton = CreateActionButton(ConfigActions, "Load", "download", "Secondary", function()
 		local Manager = Window.ConfigManager
 		if not Manager or typeof(Manager) ~= "table" then
-			Notify("Config unavailable", "Config load needs file access.", "triangle-alert")
+			Notify("Config unavailable", "Config load needs file access.", "triangle-alert", "Warning")
 			return
 		end
 
@@ -595,9 +596,9 @@ function SettingsMenu.New(Window, WindUI, Config)
 
 		if Success and Result then
 			ThemeMeta.Text = "Theme: " .. tostring(WindUI:GetCurrentTheme())
-			Notify("Config loaded", "Loaded '" .. Name .. "'.", "refresh-cw")
+			Notify("Config loaded", "Loaded '" .. Name .. "'.", "refresh-cw", "Success")
 		else
-			Notify("Config load failed", tostring(Message or Result), "triangle-alert")
+			Notify("Config load failed", tostring(Message or Result), "triangle-alert", "Error")
 		end
 	end)
 	LoadButton.Size = UDim2.new(0.5, -4, 1, 0)

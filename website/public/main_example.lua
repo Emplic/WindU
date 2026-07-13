@@ -96,6 +96,26 @@ OverviewTab:Callout({
 	Variant = "Info",
 })
 
+OverviewTab:ActionList({
+	Title = "Notification Styles",
+	Desc = "Tap a row to preview the styled toast.",
+	Actions = {
+		{ Title = "Notice", Desc = "General information with a cool accent.", Value = "Notice", Icon = "bell" },
+		{ Title = "Success", Desc = "Green completion feedback.", Value = "Success", Icon = "circle-check" },
+		{ Title = "Warning", Desc = "Persistent warning until closed.", Value = "Warning", Icon = "triangle-alert" },
+		{ Title = "Error", Desc = "Failure state with red accent.", Value = "Error", Icon = "circle-x" },
+	},
+	Callback = function(Action)
+		WindUI:Notify({
+			Title = Action.Title,
+			Content = Action.Desc,
+			Icon = Action.Icon,
+			Style = Action.Value,
+			Duration = Action.Value == "Warning" and false or 4,
+		})
+	end,
+})
+
 local OverviewStats = OverviewTab:HStack({
 	MinChildWidth = 220,
 })
@@ -181,6 +201,7 @@ FeatureCard:CardButton({
 			Title = "CardButton",
 			Content = "Card action callback fired.",
 			Icon = "check",
+			Style = "Success",
 		})
 	end,
 })
@@ -314,6 +335,7 @@ PremiumTab:Button({
 			Title = "Premium",
 			Content = "Golden button callback fired.",
 			Icon = "crown",
+			Style = "Notice",
 		})
 	end,
 })
@@ -362,6 +384,7 @@ LinkedTab:Button({
 			Title = "Linked corners",
 			Content = "Top element keeps only top corners rounded.",
 			Icon = "combine",
+			Style = "Info",
 		})
 	end,
 })
@@ -457,6 +480,7 @@ local InviteCard = DiscordTab:DiscordCard({
 			Title = "Discord callback",
 			Content = Url,
 			Icon = "external-link",
+			Style = "Notice",
 		})
 	end,
 })
@@ -566,6 +590,7 @@ Controls:ActionList({
 			Title = "Action",
 			Content = Action.Title,
 			Icon = Action.Icon or "sparkles",
+			Style = "Neutral",
 		})
 	end,
 })
