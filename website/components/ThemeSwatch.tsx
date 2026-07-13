@@ -6,6 +6,14 @@ import {
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Eye } from "lucide-react";
 
+function asset(path: string) {
+    const encoded = path
+        .split("/")
+        .map((part, index) => (index === 0 ? part : encodeURIComponent(part)))
+        .join("/");
+    return `${process.env.NEXT_PUBLIC_BASE_PATH || ""}${encoded}`;
+}
+
 function isGradient(v: any): v is {
     gradient: { pos: string; hex: string }[];
     rotation?: number;
@@ -140,9 +148,10 @@ export function ThemeSwatch({ theme }: { theme: any }) {
             </div>
 
             <img
-                src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/windui/themes/${label}.png`}
+                src={asset(`/windui/themes/${label}.png`)}
                 alt={label}
                 className="w-96 h-auto p-2 my-0!"
+                loading="lazy"
             />
         </span>
     );

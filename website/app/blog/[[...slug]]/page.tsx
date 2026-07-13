@@ -9,6 +9,16 @@ import { notFound, redirect } from "next/navigation";
 import { createRelativeLink } from "fumadocs-ui/mdx";
 import { getMDXComponents } from "@/mdx-components";
 
+function asset(path?: string) {
+    if (!path) return "";
+    if (/^https?:\/\//.test(path)) return path;
+    const encoded = path
+        .split("/")
+        .map((part, index) => (index === 0 ? part : encodeURIComponent(part)))
+        .join("/");
+    return `${process.env.NEXT_PUBLIC_BASE_PATH || ""}${encoded}`;
+}
+
 export default async function Page(props: {
     params: Promise<{ slug?: string[] }>;
 }) {
@@ -29,7 +39,7 @@ export default async function Page(props: {
                 </p>
             </div>
             <img
-                src={page.data.thumbnail}
+                src={asset(page.data.thumbnail)}
                 alt=""
                 className="m-6 md:m-8 xl:mx-auto max-w-280 rounded-lg"
             />

@@ -33,6 +33,12 @@ const previewImages = [
         span: "",
     },
     {
+        src: "/windui/banners/Tab.png",
+        title: "Tab navigation",
+        detail: "Sidebar navigation with grouped script pages and icons.",
+        span: "",
+    },
+    {
         src: "/windui/banners/Themes.png",
         title: "Theme picker",
         detail: "Theme states, config controls and dark glass treatment.",
@@ -45,11 +51,81 @@ const previewImages = [
         span: "",
     },
     {
+        src: "/windui/banners/Section.png",
+        title: "Sections",
+        detail: "Section headers, dense controls and clean content blocks.",
+        span: "",
+    },
+    {
         src: "/windui/banners/HStackVStack.png",
         title: "Layout primitives",
         detail: "HStack and VStack moved into useful layout examples.",
         span: "",
     },
+    {
+        src: "/windui/banners/Notifications.png",
+        title: "Notifications",
+        detail: "Toast states and runtime feedback for script actions.",
+        span: "",
+    },
+    {
+        src: "/windui/banners/Tag.png",
+        title: "Tags",
+        detail: "Compact metadata tags for cards, rows and script status.",
+        span: "",
+    },
+];
+
+const repoPreviewImages = [
+    {
+        src: "/windui/repo/banner-new.webp",
+        title: "Repo banner",
+        detail: "Original repository banner exported as a lightweight webp.",
+    },
+    {
+        src: "/windui/repo/banner-dark.webp",
+        title: "Dark banner",
+        detail: "Large dark presentation image from the repository docs folder.",
+    },
+    {
+        src: "/windui/repo/banner-light.webp",
+        title: "Light banner",
+        detail: "Light mode repository banner for contrast and docs usage.",
+    },
+    {
+        src: "/windui/repo/ui.png",
+        title: "Classic UI capture",
+        detail: "Legacy UI reference retained for visual comparison.",
+    },
+    {
+        src: "/windui/repo/themes-overview.png",
+        title: "Theme overview",
+        detail: "Theme screenshot from the repo docs asset set.",
+    },
+    {
+        src: "/windui/main-banner.png",
+        title: "Main banner",
+        detail: "Primary WindUI Modded website banner.",
+    },
+];
+
+const themePreviewImages = [
+    "Dark",
+    "Light",
+    "Amber",
+    "Cotton Candy",
+    "Crimson",
+    "Emerald",
+    "Indigo",
+    "Mellowsi",
+    "Midnight",
+    "Monokai Pro",
+    "Plant",
+    "Rainbow",
+    "Red",
+    "Rose",
+    "Sky",
+    "Violet",
 ];
 
 const elementGroups = [
@@ -119,8 +195,15 @@ const stats = [
     ["Liquid", "Glass modded UI"],
 ];
 
+function encodeAssetPath(path: string) {
+    return path
+        .split("/")
+        .map((part, index) => (index === 0 ? part : encodeURIComponent(part)))
+        .join("/");
+}
+
 function asset(path: string) {
-    return `${process.env.NEXT_PUBLIC_BASE_PATH || ""}${path}`;
+    return `${process.env.NEXT_PUBLIC_BASE_PATH || ""}${encodeAssetPath(path)}`;
 }
 
 export default function HomePage() {
@@ -196,6 +279,7 @@ export default function HomePage() {
                                 src={asset("/windui/previews/windui-modded-preview.png")}
                                 alt="WindUI Modded interface preview"
                                 className="aspect-[16/9] w-full object-cover"
+                                loading="eager"
                             />
                             <div className="border-t border-white/10 bg-black/60 p-4">
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -286,6 +370,7 @@ export default function HomePage() {
                                 src={asset(item.src)}
                                 alt={item.title}
                                 className="aspect-[16/9] w-full object-cover"
+                                loading="lazy"
                             />
                             <div className="border-t border-white/10 p-5">
                                 <h3 className="text-lg font-semibold">
@@ -296,6 +381,90 @@ export default function HomePage() {
                                 </p>
                             </div>
                         </article>
+                    ))}
+                </div>
+            </section>
+
+            <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+                <div className="mb-8 grid grid-cols-1 gap-5 lg:grid-cols-[0.82fr_1.18fr]">
+                    <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/45">
+                            Repo Assets
+                        </p>
+                        <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+                            Preview images from the repository
+                        </h2>
+                    </div>
+                    <p className="text-sm leading-6 text-white/58">
+                        These previews are copied from the repo asset set into
+                        the website public folder, so GitHub Pages serves them
+                        locally instead of relying on fragile external links.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    {repoPreviewImages.map((item) => (
+                        <article
+                            key={item.src}
+                            className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.055]"
+                        >
+                            <img
+                                src={asset(item.src)}
+                                alt={item.title}
+                                className="aspect-[16/9] w-full object-cover"
+                                loading="lazy"
+                            />
+                            <div className="border-t border-white/10 p-5">
+                                <h3 className="text-lg font-semibold">
+                                    {item.title}
+                                </h3>
+                                <p className="mt-2 text-sm leading-6 text-white/56">
+                                    {item.detail}
+                                </p>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+            </section>
+
+            <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+                <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/45">
+                            Theme Preview
+                        </p>
+                        <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+                            Built-in theme screenshots
+                        </h2>
+                    </div>
+                    <Link
+                        href="/docs/windui/themes"
+                        className="inline-flex h-11 w-fit items-center justify-center gap-2 rounded-full border border-white/14 bg-white/8 px-4 text-sm font-semibold text-white transition duration-200 hover:bg-white/14"
+                    >
+                        Theme docs
+                        <ArrowRight className="size-4" />
+                    </Link>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-8">
+                    {themePreviewImages.map((theme) => (
+                        <Link
+                            key={theme}
+                            href="/docs/windui/themes"
+                            className="group overflow-hidden rounded-2xl border border-white/10 bg-white/[0.055] transition duration-200 hover:border-cyan-300/30 hover:bg-cyan-300/8"
+                        >
+                            <img
+                                src={asset(`/windui/themes/${theme}.png`)}
+                                alt={`${theme} theme preview`}
+                                className="aspect-[5/4] w-full object-cover object-top transition duration-300 group-hover:scale-[1.04]"
+                                loading="lazy"
+                            />
+                            <div className="border-t border-white/10 px-3 py-2">
+                                <p className="truncate text-xs font-semibold text-white/78">
+                                    {theme}
+                                </p>
+                            </div>
+                        </Link>
                     ))}
                 </div>
             </section>
