@@ -292,18 +292,14 @@ local Window = WindUI:CreateWindow({
                     <DynamicCodeBlock
                         lang="luau"
                         code={`KeySystem = {
-    KeyValidator = function(enteredKey)
-        if enteredKey == "correct-key" then
-            return true
-        end
-        return false
-    end,
-    Note = "Get your key from Discord",
-    URL = "https://discord.gg/example",
+    Note = "Example Key System. With luarmor.",
     SaveKey = true,
-    Thumbnail = {
-        Image = "rbxassetid://1234",
-        Title = "Hub Title",
+    API = {
+        {
+            Type = "luarmor",
+            ScriptId = 1234,
+            Discord = "https://discord.gg/example",
+        },
     },
 }`}
                     />

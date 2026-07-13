@@ -436,6 +436,132 @@ function WindUI:CreateWindow(Config)
 
 	local Filename = hwid()
 
+	local function PickField(Table, Fields)
+		for _, Field in next, Fields do
+			if Table[Field] ~= nil then
+				return Table[Field]
+			end
+		end
+		return nil
+	end
+
+	local function NormalizeServiceType(Value)
+		local Raw = string.lower(tostring(Value or ""))
+		Raw = string.gsub(Raw, "%s+", "")
+		Raw = string.gsub(Raw, "[_%-%./]", "")
+
+		local Aliases = {
+			luarmor = "luarmor",
+			platoboost = "platoboost",
+			plato = "platoboost",
+			panda = "pandadevelopment",
+			pandadev = "pandadevelopment",
+			pandadevelopment = "pandadevelopment",
+			junkie = "junkiedevelopment",
+			junkiedev = "junkiedevelopment",
+			junkiedevelopment = "junkiedevelopment",
+		}
+
+		return Aliases[Raw] or Raw
+	end
+
+	local function NormalizeKeySystemAPI()
+		if not Config.KeySystem or typeof(Config.KeySystem.API) ~= "table" then
+			return
+		end
+
+		local RawAPI = Config.KeySystem.API
+		local APIList = RawAPI
+		if RawAPI.Type or RawAPI.type or RawAPI.Service or RawAPI.service then
+			APIList = { RawAPI }
+		end
+
+		local Normalized = {}
+		for _, ServiceConfig in next, APIList do
+			if typeof(ServiceConfig) == "table" then
+				local Service = {}
+				for Key, Value in next, ServiceConfig do
+					Service[Key] = Value
+				end
+
+				Service.Type = NormalizeServiceType(PickField(ServiceConfig, {
+					"Type",
+					"type",
+					"Service",
+					"service",
+					"Provider",
+					"provider",
+				}))
+
+				Service.ScriptId = PickField(ServiceConfig, {
+					"ScriptId",
+					"ScriptID",
+					"scriptId",
+					"scriptID",
+					"script_id",
+					"Script",
+					"script",
+					"Id",
+					"ID",
+					"id",
+				}) or Service.ScriptId
+
+				Service.ServiceId = PickField(ServiceConfig, {
+					"ServiceId",
+					"ServiceID",
+					"serviceId",
+					"serviceID",
+					"service_id",
+					"Service",
+					"service",
+					"Id",
+					"ID",
+					"id",
+				}) or Service.ServiceId
+
+				Service.Discord = PickField(ServiceConfig, {
+					"Discord",
+					"discord",
+					"DiscordURL",
+					"DiscordUrl",
+					"discordUrl",
+					"discord_url",
+					"Invite",
+					"invite",
+					"URL",
+					"Url",
+					"url",
+				}) or Service.Discord
+
+				Service.Secret = PickField(ServiceConfig, {
+					"Secret",
+					"secret",
+					"ApiSecret",
+					"APISecret",
+					"apiSecret",
+					"api_secret",
+				}) or Service.Secret
+
+				Service.ApiKey = PickField(ServiceConfig, {
+					"ApiKey",
+					"APIKey",
+					"apiKey",
+					"api_key",
+					"Key",
+					"key",
+				}) or Service.ApiKey
+
+				if Service.Type and Service.Type ~= "" then
+					table.insert(Normalized, Service)
+				end
+			end
+		end
+
+		Config.KeySystem.API = Normalized
+	end
+
+	NormalizeKeySystemAPI()
+
 	if Config.KeySystem then
 		CanLoadWindow = false
 

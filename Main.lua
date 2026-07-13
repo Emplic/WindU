@@ -25997,6 +25997,132 @@ end
 
 local l=i()
 
+local function PickField(m,p)
+for r,u in next,p do
+if m[u]~=nil then
+return m[u]
+end
+end
+return nil
+end
+
+local function NormalizeServiceType(m)
+local p=string.lower(tostring(m or""))
+p=string.gsub(p,"%s+","")
+p=string.gsub(p,"[_%-%./]","")
+
+local r={
+luarmor="luarmor",
+platoboost="platoboost",
+plato="platoboost",
+panda="pandadevelopment",
+pandadev="pandadevelopment",
+pandadevelopment="pandadevelopment",
+junkie="junkiedevelopment",
+junkiedev="junkiedevelopment",
+junkiedevelopment="junkiedevelopment",
+}
+
+return r[p]or p
+end
+
+local function NormalizeKeySystemAPI()
+if not aB.KeySystem or typeof(aB.KeySystem.API)~="table"then
+return
+end
+
+local m=aB.KeySystem.API
+local p=m
+if m.Type or m.type or m.Service or m.service then
+p={m}
+end
+
+local r={}
+for u,v in next,p do
+if typeof(v)=="table"then
+local x={}
+for z,A in next,v do
+x[z]=A
+end
+
+x.Type=NormalizeServiceType(PickField(v,{
+"Type",
+"type",
+"Service",
+"service",
+"Provider",
+"provider",
+}))
+
+x.ScriptId=PickField(v,{
+"ScriptId",
+"ScriptID",
+"scriptId",
+"scriptID",
+"script_id",
+"Script",
+"script",
+"Id",
+"ID",
+"id",
+})or x.ScriptId
+
+x.ServiceId=PickField(v,{
+"ServiceId",
+"ServiceID",
+"serviceId",
+"serviceID",
+"service_id",
+"Service",
+"service",
+"Id",
+"ID",
+"id",
+})or x.ServiceId
+
+x.Discord=PickField(v,{
+"Discord",
+"discord",
+"DiscordURL",
+"DiscordUrl",
+"discordUrl",
+"discord_url",
+"Invite",
+"invite",
+"URL",
+"Url",
+"url",
+})or x.Discord
+
+x.Secret=PickField(v,{
+"Secret",
+"secret",
+"ApiSecret",
+"APISecret",
+"apiSecret",
+"api_secret",
+})or x.Secret
+
+x.ApiKey=PickField(v,{
+"ApiKey",
+"APIKey",
+"apiKey",
+"api_key",
+"Key",
+"key",
+})or x.ApiKey
+
+if x.Type and x.Type~=""then
+table.insert(r,x)
+end
+end
+end
+
+aB.KeySystem.API=r
+end
+
+NormalizeKeySystemAPI()
+
 if aB.KeySystem then
 d=false
 
