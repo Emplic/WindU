@@ -636,6 +636,32 @@ function Creator.ApplyCornerRadii(Corner, Radius, Corners)
 	return Corner
 end
 
+function Creator.CreateUIShadow(Parent, Properties)
+	local Shadow
+	local Success = pcall(function()
+		Shadow = Instance.new("UIShadow")
+		for Name, Value in Properties or {} do
+			if Name ~= "Parent" and Name ~= "ThemeTag" then
+				Shadow[Name] = Value
+			end
+		end
+		Shadow.Parent = Parent or (Properties and Properties.Parent)
+	end)
+
+	if not Success then
+		if Shadow then
+			Shadow:Destroy()
+		end
+		return nil
+	end
+
+	if Properties and Properties.ThemeTag then
+		Creator.AddThemeObject(Shadow, Properties.ThemeTag)
+	end
+
+	return Shadow
+end
+
 function Creator.DefaultCornerMap()
 	return {
 		TopLeft = true,

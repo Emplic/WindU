@@ -1,5 +1,5 @@
 local WindUI =
-	loadstring(game:HttpGet("https://article-hub-studio.github.io/WindUI-Skibidi/loader.lua?v=1.6.65-ui-runtime-4"))()
+	loadstring(game:HttpGet("https://article-hub-studio.github.io/WindUI-Skibidi/loader.lua?v=1.6.65-ui-runtime-5"))()
 
 local HasIconSourceAPI = (tonumber(WindUI.IconAdapterVersion) or 0) >= 3
 	and type(WindUI.RegisterIconPack) == "function"
@@ -247,18 +247,18 @@ local SystemTab = Window:Tab({
 
 SystemTab:Callout({
 	Title = "Notification + Dynamic Island",
-	Desc = "Preview the new UI states and icon resolver without recreating the window.",
+	Desc = "Preview native UI shadows, individual corners and Dynamic Island states.",
 	Variant = "Info",
 	Icon = DemoIcon("island", "radio"),
 })
 
 SystemTab:ActionList({
 	Title = "Notification Gallery",
-	Desc = "Compact capsules, metadata cards and accented glass all use the same Notify API.",
+	Desc = "Compact native-shadow toasts, metadata cards and accented glass use the same Notify API.",
 	Actions = {
 		{
-			Title = "Compact Capsule",
-			Desc = "Minimal dark notification with a two-pixel timer.",
+			Title = "Compact Toast",
+			Desc = "Small toast with native shadow and a short timer.",
 			Value = "Compact",
 			Icon = SourceIcon("solar", "bell-bold", "bell"),
 		},
@@ -295,11 +295,17 @@ SystemTab:ActionList({
 		elseif Action.Value == "Decorated" then
 			WindUI:Notify({
 				Title = "Saved successfully",
-				Content = "This capsule uses an accent wash while keeping the compact layout.",
+				Content = "Native shadow, individual corners and a quiet accent rail.",
 				Appearance = "Compact",
 				Icon = DemoIcon("success", "circle-check"),
 				Style = "Success",
 				Decorated = true,
+				Corners = {
+					TopLeft = 18,
+					TopRight = 18,
+					BottomRight = 18,
+					BottomLeft = 10,
+				},
 			})
 		elseif Action.Value == "Glass" then
 			WindUI:Notify({
@@ -330,7 +336,7 @@ SystemTab:ActionList({
 		else
 			WindUI:Notify({
 				Title = "Notification example",
-				Content = "A compact dark capsule using a table-based Solar icon reference.",
+				Content = "Compact toast using a table-based Solar icon reference.",
 				Appearance = "Compact",
 				Icon = SourceIcon("solar", "bell-bold", "bell"),
 				Style = "Info",

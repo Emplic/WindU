@@ -69,17 +69,26 @@ const checks = {
 		/CACHE_KEY/.test(loader) &&
 		/REQUIRED_API/.test(loader) &&
 		/AdapterVersion/.test(loader) &&
+		/CreateUIShadow/.test(loader) &&
 		/RegisterIconPack/.test(loader) &&
 		/GetIconSources/.test(loader) &&
-		/pcall\(chunk\)/.test(loader),
+		/pcall\(Chunk\)/.test(loader),
+	canonicalRuntimeLoader:
+		/SOURCE_URL/.test(loader) &&
+		/article-hub-studio\.github\.io\/WindUI-Skibidi\/dist\/main\.lua/.test(loader) &&
+		!/MIRRORS/.test(loader) &&
+		!/cdn\.jsdelivr\.net/.test(loader),
 	publishedRuntimeSynced: runtime.equals(publicRuntime) && runtime.equals(publicDistRuntime),
 	builtIconAdapter:
 		runtime.includes("AdapterVersion=3") &&
 		runtime.includes("Unable to load the base icon catalog; custom sources remain available"),
+	builtNativeUi:
+		runtime.includes("CreateUIShadow") && runtime.includes("UIShadow") && runtime.includes("LayoutVersion"),
 	exampleRuntimeCompatibility:
 		/HasIconSourceAPI/.test(example) &&
 		/HasDynamicIslandAPI/.test(example) &&
-		/NotifyOutdatedRuntime/.test(example),
+		/NotifyOutdatedRuntime/.test(example) &&
+		/ui-runtime-5/.test(example),
 }
 
 const failed = Object.entries(checks).filter(([, ok]) => !ok)

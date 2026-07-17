@@ -12,7 +12,7 @@ import TypeTable from '@/components/TypeTable';
 
 
 ## Load methods
-### Pages loader <Popover><PopoverTrigger><Badge className="pl-1.25"><Info />Recommended</Badge></PopoverTrigger><PopoverContent className="bg-white rounded-xl px-2.5 py-1.5 border-0 text-black text-xs font-medium">Uses GitHub Pages first and falls back to CDN/release mirrors when a host is rate limited.</PopoverContent></Popover>
+### Pages loader <Popover><PopoverTrigger><Badge className="pl-1.25"><Info />Recommended</Badge></PopoverTrigger><PopoverContent className="bg-white rounded-xl px-2.5 py-1.5 border-0 text-black text-xs font-medium">Validates and loads only the canonical build published by this repository on GitHub Pages.</PopoverContent></Popover>
 ```luau
 local WindUI = loadstring(game:HttpGet("https://article-hub-studio.github.io/WindUI-Skibidi/loader.lua"))()
 ```
@@ -31,7 +31,7 @@ local WindUI = loadstring(game:HttpGet("https://github.com/article-hub-studio/Wi
 local WindUI = loadstring(game:HttpGet("https://github.com/article-hub-studio/WindUI-Skibidi/releases/latest/download/main.lua"))()
 ```
 
-### CDN fallback <Popover><PopoverTrigger><Badge className="pl-1.25" variant="destructive"><CircleAlert />Unstable</Badge></PopoverTrigger><PopoverContent className="bg-destructive/70 backdrop-blur-xl rounded-xl px-2.5 py-1.5 border-0 text-white text-xs font-medium">Use this only if Pages is blocked. The Pages loader is still safer because it rotates mirrors.</PopoverContent></Popover>
+### CDN fallback <Popover><PopoverTrigger><Badge className="pl-1.25" variant="destructive"><CircleAlert />Unstable</Badge></PopoverTrigger><PopoverContent className="bg-destructive/70 backdrop-blur-xl rounded-xl px-2.5 py-1.5 border-0 text-white text-xs font-medium">This third-party route is not used by the canonical loader. Prefer the Pages loader whenever possible.</PopoverContent></Popover>
 
 ```luau
 local WindUI = loadstring(game:HttpGet("https://cdn.jsdelivr.net/gh/article-hub-studio/WindUI-Skibidi@main/dist/main.lua"))()

@@ -1,54 +1,39 @@
-local CACHE_KEY = "1.6.65-ui-runtime-4"
-local REQUIRED_API = { "RegisterIconPack", "GetIconSources", "ExpandOpenButton", "AdapterVersion=3" }
+local CACHE_KEY = "1.6.65-ui-runtime-5"
+local REQUIRED_API = { "RegisterIconPack", "GetIconSources", "ExpandOpenButton", "AdapterVersion=3", "CreateUIShadow" }
+local SOURCE_URL = "https://article-hub-studio.github.io/WindUI-Skibidi/dist/main.lua?v=" .. CACHE_KEY
 
-local MIRRORS = {
-	"https://raw.githubusercontent.com/article-hub-studio/WindUI-Skibidi/main/dist/main.lua?v=" .. CACHE_KEY,
-	"https://article-hub-studio.github.io/WindUI-Skibidi/dist/main.lua?v=" .. CACHE_KEY,
-	"https://article-hub-studio.github.io/WindUI-Skibidi/main.lua?v=" .. CACHE_KEY,
-	"https://cdn.jsdelivr.net/gh/article-hub-studio/WindUI-Skibidi@main/dist/main.lua",
-	"https://github.com/article-hub-studio/WindUI-Skibidi/releases/latest/download/main.lua",
-}
+local Success, Source = pcall(function()
+	return game:HttpGet(SOURCE_URL)
+end)
 
-local lastError = "no mirrors tried"
+if not Success or type(Source) ~= "string" or #Source <= 1000 then
+	error("[WindUI Modded] Canonical runtime is unavailable: " .. tostring(Source))
+end
 
-for _, url in ipairs(MIRRORS) do
-	local ok, body = pcall(function()
-		return game:HttpGet(url)
-	end)
+local Prefix = string.lower(string.sub(Source, 1, 220))
+if
+	string.find(Prefix, "429:", 1, true)
+	or string.find(Prefix, "too many requests", 1, true)
+	or string.find(Prefix, "<html", 1, true)
+	or string.find(Prefix, "<!doctype", 1, true)
+then
+	error("[WindUI Modded] Canonical runtime returned an invalid response")
+end
 
-	if ok and type(body) == "string" then
-		local prefix = string.lower(string.sub(body, 1, 220))
-		local blocked = string.find(prefix, "429:", 1, true)
-			or string.find(prefix, "too many requests", 1, true)
-			or string.find(prefix, "<html", 1, true)
-			or string.find(prefix, "<!doctype", 1, true)
-
-		local currentApi = true
-		for _, method in ipairs(REQUIRED_API) do
-			if not string.find(body, method, 1, true) then
-				currentApi = false
-				lastError = "outdated runtime from " .. url .. " (missing " .. method .. ")"
-				break
-			end
-		end
-
-		if not blocked and currentApi and #body > 1000 then
-			local chunk, compileError = loadstring(body)
-			if chunk then
-				local ran, result = pcall(chunk)
-				if ran then
-					return result
-				end
-				lastError = tostring(result)
-			else
-				lastError = tostring(compileError)
-			end
-		elseif blocked or #body <= 1000 then
-			lastError = "blocked or invalid response from " .. url
-		end
-	else
-		lastError = tostring(body)
+for _, Method in REQUIRED_API do
+	if not string.find(Source, Method, 1, true) then
+		error("[WindUI Modded] Canonical runtime is outdated (missing " .. Method .. ")")
 	end
 end
 
-error("[WindUI Modded] Failed to load any mirror: " .. tostring(lastError))
+local Chunk, CompileError = loadstring(Source)
+if not Chunk then
+	error("[WindUI Modded] Runtime compile failed: " .. tostring(CompileError))
+end
+
+local Ran, Library = pcall(Chunk)
+if not Ran then
+	error("[WindUI Modded] Runtime failed: " .. tostring(Library))
+end
+
+return Library
