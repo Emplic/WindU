@@ -44,7 +44,7 @@ local function LoadBaseIcons()
 end
 
 local IconModule = LoadBaseIcons()
-IconModule.AdapterVersion = 2
+IconModule.AdapterVersion = 3
 
 local DEFAULT_SOURCE_ALIASES = {
 	lucidev = "lucide",

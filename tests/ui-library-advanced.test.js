@@ -24,9 +24,12 @@ const checks = {
 		/local function LoadBaseIcons/.test(icons) &&
 		/FindFirstChild\("GetIcons"\)/.test(icons) &&
 		/game:HttpGet\(ICONS_URL\)/.test(icons) &&
-		/IconModule\.AdapterVersion = 2/.test(icons) &&
+		/IconModule\.AdapterVersion = 3/.test(icons) &&
 		/local Icons = require\("\.\/Icons"\)/.test(creator) &&
 		!/RunService:IsStudio\(\) or not writefile/.test(creator),
+	creatorImageContract:
+		/IconLabel\.Name = "ImageLabel"/.test(creator) &&
+		/IconLabel\.Parent = ImageFrame/.test(creator),
 	iconPackAliases:
 		/typeof\(IconValue\) == "table" and IconValue\.Alias/.test(icons) &&
 		/Pack\.Icons\[IconName\] = \{ Alias = IconValue\.Alias \}/.test(icons),
@@ -71,7 +74,7 @@ const checks = {
 		/pcall\(chunk\)/.test(loader),
 	publishedRuntimeSynced: runtime.equals(publicRuntime) && runtime.equals(publicDistRuntime),
 	builtIconAdapter:
-		runtime.includes("AdapterVersion=2") &&
+		runtime.includes("AdapterVersion=3") &&
 		runtime.includes("Unable to load the base icon catalog; custom sources remain available"),
 	exampleRuntimeCompatibility:
 		/HasIconSourceAPI/.test(example) &&

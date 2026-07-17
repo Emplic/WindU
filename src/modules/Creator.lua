@@ -946,6 +946,7 @@ function Creator.Image(Img, Name, Corner, Folder, Type, IsThemeTag, Themed, Them
 				"Button",
 			},
 		}).IconFrame
+		IconLabel.Name = "ImageLabel"
 		IconLabel.Parent = ImageFrame
 	elseif IsExternalURL then
 		local FileName = "WindUI/" .. FolderName .. "/assets/." .. Type .. "-" .. Name .. ".png"

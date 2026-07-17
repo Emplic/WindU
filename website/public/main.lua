@@ -295,7 +295,7 @@ return{}
 end
 
 local h=LoadBaseIcons()
-h.AdapterVersion=2
+h.AdapterVersion=3
 
 local i={
 lucidev="lucide",
@@ -1909,6 +1909,7 @@ M or false,
 "Button",
 },
 }.IconFrame
+O.Name="ImageLabel"
 O.Parent=N
 elseif J then
 local O="WindUI/"..H.."/assets/."..B.."-"..x..".png"
