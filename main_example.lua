@@ -1,7 +1,8 @@
 local WindUI =
-	loadstring(game:HttpGet("https://article-hub-studio.github.io/WindUI-Skibidi/loader.lua?v=1.6.65-ui-runtime-2"))()
+	loadstring(game:HttpGet("https://article-hub-studio.github.io/WindUI-Skibidi/loader.lua?v=1.6.65-ui-runtime-3"))()
 
-local HasIconSourceAPI = type(WindUI.RegisterIconPack) == "function"
+local HasIconSourceAPI = (tonumber(WindUI.IconAdapterVersion) or 0) >= 2
+	and type(WindUI.RegisterIconPack) == "function"
 	and type(WindUI.AddIconSourceAlias) == "function"
 	and type(WindUI.GetIconSources) == "function"
 

@@ -20,6 +20,16 @@ const checks = {
 		/function IconModule\.AddIcons/.test(icons) &&
 		/function IconModule\.AddSourceAlias/.test(icons) &&
 		/function IconModule\.GetIconSources/.test(icons),
+	executorIconAdapter:
+		/local function LoadBaseIcons/.test(icons) &&
+		/FindFirstChild\("GetIcons"\)/.test(icons) &&
+		/game:HttpGet\(ICONS_URL\)/.test(icons) &&
+		/IconModule\.AdapterVersion = 2/.test(icons) &&
+		/local Icons = require\("\.\/Icons"\)/.test(creator) &&
+		!/RunService:IsStudio\(\) or not writefile/.test(creator),
+	iconPackAliases:
+		/typeof\(IconValue\) == "table" and IconValue\.Alias/.test(icons) &&
+		/Pack\.Icons\[IconName\] = \{ Alias = IconValue\.Alias \}/.test(icons),
 	safeIconFallback:
 		/local Image = Resolved and Resolved\[1\] or ""/.test(icons) &&
 		/function IconModule\.HasIcon/.test(icons),
@@ -55,10 +65,14 @@ const checks = {
 	freshRuntimeLoader:
 		/CACHE_KEY/.test(loader) &&
 		/REQUIRED_API/.test(loader) &&
+		/AdapterVersion/.test(loader) &&
 		/RegisterIconPack/.test(loader) &&
 		/GetIconSources/.test(loader) &&
 		/pcall\(chunk\)/.test(loader),
 	publishedRuntimeSynced: runtime.equals(publicRuntime) && runtime.equals(publicDistRuntime),
+	builtIconAdapter:
+		runtime.includes("AdapterVersion=2") &&
+		runtime.includes("Unable to load the base icon catalog; custom sources remain available"),
 	exampleRuntimeCompatibility:
 		/HasIconSourceAPI/.test(example) &&
 		/HasDynamicIslandAPI/.test(example) &&

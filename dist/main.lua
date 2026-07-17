@@ -254,10 +254,50 @@ return b
 end)
 
 local d=b(game:GetService"ReplicatedStorage")
-local e=d:WaitForChild("GetIcons",99999):InvokeServer()
-local f=if typeof(e)=="table"then e else{}
+local e=b(game:GetService"HttpService")
+local f=b(game:GetService"RunService")
 
-local g={
+local g="https://article-hub-studio.github.io/WindUI-Skibidi/vendor/icons/Main-v2.lua"
+
+local function LoadBaseIcons()
+local h=d:FindFirstChild"GetIcons"
+if
+h
+and h:IsA"RemoteFunction"
+and(f:IsStudio()or h:GetAttribute"WindUIIcons"==true)
+then
+local i,j=pcall(function()
+return h:InvokeServer()
+end)
+if i and typeof(j)=="table"then
+return j
+end
+end
+
+local i,j=pcall(function()
+if game.HttpGet then
+return game:HttpGet(g)
+end
+return e:GetAsync(g)
+end)
+if i and type(j)=="string"and type(loadstring)=="function"then
+local l=loadstring(j)
+if l then
+local m,p=pcall(l)
+if m and typeof(p)=="table"then
+return p
+end
+end
+end
+
+warn"[ WindUI.Icons ] Unable to load the base icon catalog; custom sources remain available"
+return{}
+end
+
+local h=LoadBaseIcons()
+h.AdapterVersion=2
+
+local i={
 lucidev="lucide",
 lucideicons="lucide",
 sf="sfsymbols",
@@ -267,269 +307,269 @@ gravityui="gravity",
 gravity_ui="gravity",
 }
 
-f.Icons=if typeof(f.Icons)=="table"then f.Icons else{}
-f.IconsType=f.IconsType or"lucide"
-f.SourceAliases=if typeof(f.SourceAliases)=="table"then f.SourceAliases else{}
-f.Resolvers=if typeof(f.Resolvers)=="table"then f.Resolvers else{}
-f.FallbackAcrossSources=f.FallbackAcrossSources~=false
+h.Icons=if typeof(h.Icons)=="table"then h.Icons else{}
+h.IconsType=h.IconsType or"lucide"
+h.SourceAliases=if typeof(h.SourceAliases)=="table"then h.SourceAliases else{}
+h.Resolvers=if typeof(h.Resolvers)=="table"then h.Resolvers else{}
+h.FallbackAcrossSources=h.FallbackAcrossSources~=false
 
-for h,i in g do
-if f.SourceAliases[h]==nil then
-f.SourceAliases[h]=i
+for j,l in i do
+if h.SourceAliases[j]==nil then
+h.SourceAliases[j]=l
 end
 end
 
-local h
+local j
 
-local function NormalizeSourceName(i)
-if type(i)~="string"then
+local function NormalizeSourceName(l)
+if type(l)~="string"then
 return nil
 end
 
-local j=i:lower():gsub("%s+",""):gsub("[^%w_%-]","")
-if j==""then
+local m=l:lower():gsub("%s+",""):gsub("[^%w_%-]","")
+if m==""then
 return nil
 end
-return j
+return m
 end
 
-local function ResolveSourceAlias(i)
-local j=NormalizeSourceName(i)
-local l={}
+local function ResolveSourceAlias(l)
+local m=NormalizeSourceName(l)
+local p={}
 
-for m=1,8 do
-if not j or l[j]then
+for r=1,8 do
+if not m or p[m]then
 break
 end
-l[j]=true
+p[m]=true
 
-local p=f.SourceAliases[j]
-if not p then
+local u=h.SourceAliases[m]
+if not u then
 break
 end
-j=NormalizeSourceName(p)
+m=NormalizeSourceName(u)
 end
 
-return j
+return m
 end
 
-local function NormalizeImage(i)
-if type(i)=="number"then
-return"rbxassetid://"..tostring(i)
+local function NormalizeImage(l)
+if type(l)=="number"then
+return"rbxassetid://"..tostring(l)
 end
-if type(i)~="string"then
+if type(l)~="string"then
 return nil
 end
 
-if i:match"^%d+$"then
-return"rbxassetid://"..i
+if l:match"^%d+$"then
+return"rbxassetid://"..l
 end
-return i
+return l
 end
 
-local function IsDirectImage(i)
-if type(i)=="number"then
+local function IsDirectImage(l)
+if type(l)=="number"then
 return true
 end
-if type(i)~="string"then
+if type(l)~="string"then
 return false
 end
 
-return i:match"^%d+$"~=nil
-or i:match"^rbxassetid://"~=nil
-or i:match"^rbxthumb://"~=nil
-or i:match"^rbxgameasset://"~=nil
-or i:match"^https?://"~=nil
+return l:match"^%d+$"~=nil
+or l:match"^rbxassetid://"~=nil
+or l:match"^rbxthumb://"~=nil
+or l:match"^rbxgameasset://"~=nil
+or l:match"^https?://"~=nil
 end
 
-local function NormalizeVector2(i)
-if typeof(i)=="Vector2"then
-return i
+local function NormalizeVector2(l)
+if typeof(l)=="Vector2"then
+return l
 end
-if typeof(i)=="table"then
-return Vector2.new(tonumber(i.X or i.x or i[1])or 0,tonumber(i.Y or i.y or i[2])or 0)
+if typeof(l)=="table"then
+return Vector2.new(tonumber(l.X or l.x or l[1])or 0,tonumber(l.Y or l.y or l[2])or 0)
 end
 return Vector2.zero
 end
 
-local function NormalizeDescriptor(i)
-if IsDirectImage(i)then
+local function NormalizeDescriptor(l)
+if IsDirectImage(l)then
 return{
-Image=NormalizeImage(i),
+Image=NormalizeImage(l),
 ImageRectSize=Vector2.zero,
 ImageRectPosition=Vector2.zero,
 Parts=nil,
 }
 end
 
-if typeof(i)~="table"then
+if typeof(l)~="table"then
 return nil
 end
 
-local j=i.Image or i.Asset or i.AssetId or i.Id or i.URL or i.Url
-if not IsDirectImage(j)then
+local m=l.Image or l.Asset or l.AssetId or l.Id or l.URL or l.Url
+if not IsDirectImage(m)then
 return nil
 end
 
 return{
-Image=NormalizeImage(j),
-ImageRectSize=NormalizeVector2(i.ImageRectSize or i.RectSize or i.Size),
+Image=NormalizeImage(m),
+ImageRectSize=NormalizeVector2(l.ImageRectSize or l.RectSize or l.Size),
 ImageRectPosition=NormalizeVector2(
-i.ImageRectPosition or i.ImageRectOffset or i.RectPosition or i.Offset
+l.ImageRectPosition or l.ImageRectOffset or l.RectPosition or l.Offset
 ),
-Parts=i.Parts,
+Parts=l.Parts,
 }
 end
 
-local function ParseIconReference(i)
-if typeof(i)=="table"then
-return i.Source or i.Pack or i.Library or i.Type,i.Name or i.Icon or i.Key,i
+local function ParseIconReference(l)
+if typeof(l)=="table"then
+return l.Source or l.Pack or l.Library or l.Type,l.Name or l.Icon or l.Key,l
 end
 
-if type(i)~="string"or IsDirectImage(i)then
-return nil,i,i
+if type(l)~="string"or IsDirectImage(l)then
+return nil,l,l
 end
 
-local j,l=i:match"^@([%w_%-]+)/(.+)$"
-if not j then
-j,l=i:match"^([%w_%-]+):(.+)$"
+local m,p=l:match"^@([%w_%-]+)/(.+)$"
+if not m then
+m,p=l:match"^([%w_%-]+):(.+)$"
 end
-if not j then
-j,l=i:match"^([%w_%-]+)/(.+)$"
-end
-
-return j,l or i,i
+if not m then
+m,p=l:match"^([%w_%-]+)/(.+)$"
 end
 
-local function FindSource(i)
-local j=ResolveSourceAlias(i)
-if not j then
+return m,p or l,l
+end
+
+local function FindSource(l)
+local m=ResolveSourceAlias(l)
+if not m then
 return nil,nil
 end
 
-if f.Icons[j]then
-return f.Icons[j],j
+if h.Icons[m]then
+return h.Icons[m],m
 end
 
-for l,m in f.Icons do
-if NormalizeSourceName(l)==j then
-return m,l
+for p,r in h.Icons do
+if NormalizeSourceName(p)==m then
+return r,p
 end
 end
 
-return nil,j
+return nil,m
 end
 
 local function GetSourceNames()
-local i={}
-for j in f.Icons do
-table.insert(i,tostring(j))
+local l={}
+for m in h.Icons do
+table.insert(l,tostring(m))
 end
-table.sort(i,function(j,l)
-return j:lower()<l:lower()
+table.sort(l,function(m,p)
+return m:lower()<p:lower()
 end)
-return i
+return l
 end
 
-local i
+local l
 
-local function ResolvePackIcon(j,l,m)
-if typeof(j)~="table"or l==nil then
+local function ResolvePackIcon(m,p,r)
+if typeof(m)~="table"or p==nil then
 return nil
 end
 
-local p=if typeof(j.Icons)=="table"then j.Icons else j
-local r=p[l]
-if r==nil then
-local u=tostring(l):lower()
-for v,x in p do
-if tostring(v):lower()==u then
-r=x
+local u=if typeof(m.Icons)=="table"then m.Icons else m
+local v=u[p]
+if v==nil then
+local x=tostring(p):lower()
+for z,A in u do
+if tostring(z):lower()==x then
+v=A
 break
 end
 end
 end
 
-if typeof(r)=="table"and r.Alias then
-return i(r.Alias,nil,(m or 0)+1)
-end
-
-local u=typeof(r)=="table"
-and(r.Image or r.Asset or r.AssetId or r.Id or r.URL or r.Url)
-or r
-local v=NormalizeDescriptor(r)
-if not v then
-return nil
-end
-
-if typeof(j.Spritesheets)=="table"then
-v.Image=j.Spritesheets[u]
-or j.Spritesheets[tostring(u)]
-or j.Spritesheets[v.Image]
-or j.Spritesheets[tostring(v.Image)]
-or v.Image
-end
-
-return v
-end
-
-local function ResolveProviderIcon(j,l)
-local m=f.Resolvers[ResolveSourceAlias(j)]
-if typeof(m)~="function"then
-return nil
-end
-
-local p,r=pcall(m,l,j)
-if not p then
-warn(string.format("[ WindUI.Icons ] Source '%s' failed: %s",tostring(j),tostring(r)))
-return nil
-end
-
-return NormalizeDescriptor(r)
-end
-
-i=function(j,l,m)
-if(m or 0)>8 then
-return nil
-end
-
-local p=NormalizeDescriptor(j)
-if p then
-return p
-end
-
-local r,u,v=ParseIconReference(j)
 if typeof(v)=="table"and v.Alias then
-return i(v.Alias,l,(m or 0)+1)
+return l(v.Alias,nil,(r or 0)+1)
 end
 
-local x=ResolveSourceAlias(r or l or f.IconsType)
-if x then
-local z=FindSource(x)
-local A=ResolvePackIcon(z,u,m)or ResolveProviderIcon(x,u)
+local x=typeof(v)=="table"
+and(v.Image or v.Asset or v.AssetId or v.Id or v.URL or v.Url)
+or v
+local z=NormalizeDescriptor(v)
+if not z then
+return nil
+end
+
+if typeof(m.Spritesheets)=="table"then
+z.Image=m.Spritesheets[x]
+or m.Spritesheets[tostring(x)]
+or m.Spritesheets[z.Image]
+or m.Spritesheets[tostring(z.Image)]
+or z.Image
+end
+
+return z
+end
+
+local function ResolveProviderIcon(m,p)
+local r=h.Resolvers[ResolveSourceAlias(m)]
+if typeof(r)~="function"then
+return nil
+end
+
+local u,v=pcall(r,p,m)
+if not u then
+warn(string.format("[ WindUI.Icons ] Source '%s' failed: %s",tostring(m),tostring(v)))
+return nil
+end
+
+return NormalizeDescriptor(v)
+end
+
+l=function(m,p,r)
+if(r or 0)>8 then
+return nil
+end
+
+local u=NormalizeDescriptor(m)
+if u then
+return u
+end
+
+local v,x,z=ParseIconReference(m)
+if typeof(z)=="table"and z.Alias then
+return l(z.Alias,p,(r or 0)+1)
+end
+
+local A=ResolveSourceAlias(v or p or h.IconsType)
 if A then
-return A
+local B=FindSource(A)
+local C=ResolvePackIcon(B,x,r)or ResolveProviderIcon(A,x)
+if C then
+return C
 end
 end
 
-if r or not f.FallbackAcrossSources then
+if v or not h.FallbackAcrossSources then
 return nil
 end
 
-for z,A in GetSourceNames()do
-if ResolveSourceAlias(A)~=x then
-local B=ResolvePackIcon(f.Icons[A],u,m)
-if B then
-return B
+for B,C in GetSourceNames()do
+if ResolveSourceAlias(C)~=A then
+local F=ResolvePackIcon(h.Icons[C],x,r)
+if F then
+return F
 end
 end
 end
 
-for z,A in f.Resolvers do
-if z~=x and typeof(A)=="function"then
-local B=ResolveProviderIcon(z,u)
-if B then
-return B
+for B,C in h.Resolvers do
+if B~=A and typeof(C)=="function"then
+local F=ResolveProviderIcon(B,x)
+if F then
+return F
 end
 end
 end
@@ -537,218 +577,218 @@ end
 return nil
 end
 
-local function FormatDescriptor(j,l)
-if not j then
+local function FormatDescriptor(m,p)
+if not m then
 return nil
 end
 
-if l==false and j.ImageRectSize==Vector2.zero and not j.Parts then
-return j.Image
+if p==false and m.ImageRectSize==Vector2.zero and not m.Parts then
+return m.Image
 end
 
-return{j.Image,j}
+return{m.Image,m}
 end
 
-function f.AddSourceAlias(j,l)
-local m=NormalizeSourceName(j)
-local p=NormalizeSourceName(l)
-assert(m and p,"AddSourceAlias: alias and source must be non-empty strings")
-f.SourceAliases[m]=p
-return f
+function h.AddSourceAlias(m,p)
+local r=NormalizeSourceName(m)
+local u=NormalizeSourceName(p)
+assert(r and u,"AddSourceAlias: alias and source must be non-empty strings")
+h.SourceAliases[r]=u
+return h
 end
 
-function f.RegisterIconSource(j,l,m)
-local p=NormalizeSourceName(j)
-assert(p,"RegisterIconSource: source must be a non-empty string")
+function h.RegisterIconSource(m,p,r)
+local u=NormalizeSourceName(m)
+assert(u,"RegisterIconSource: source must be a non-empty string")
 
-if typeof(l)=="function"then
-f.Resolvers[p]=l
-elseif typeof(l)=="table"then
-f.AddIcons(p,l)
+if typeof(p)=="function"then
+h.Resolvers[u]=p
+elseif typeof(p)=="table"then
+h.AddIcons(u,p)
 else
 error"RegisterIconSource: provider must be a function or icon table"
 end
 
-if typeof(m)=="table"then
-for r,u in m.Aliases or{}do
-f.AddSourceAlias(u,p)
+if typeof(r)=="table"then
+for v,x in r.Aliases or{}do
+h.AddSourceAlias(x,u)
 end
 end
 
-return f
+return h
 end
 
-function f.AddIcons(j,l)
-local m=NormalizeSourceName(j)
-assert(m and typeof(l)=="table","AddIcons: packName must be string and iconsData must be table")
+function h.AddIcons(m,p)
+local r=NormalizeSourceName(m)
+assert(r and typeof(p)=="table","AddIcons: packName must be string and iconsData must be table")
 
-local p=f.Icons[m]
-if typeof(p)~="table"or typeof(p.Icons)~="table"then
-p={
+local u=h.Icons[r]
+if typeof(u)~="table"or typeof(u.Icons)~="table"then
+u={
 Icons={},
 Spritesheets={},
 }
-f.Icons[m]=p
+h.Icons[r]=u
 end
 
-for r,u in l do
-local v=NormalizeDescriptor(u)
-if v then
-p.Icons[r]=v
-p.Spritesheets[v.Image]=v.Image
-elseif typeof(u)=="table"and u.Alias then
-p.Icons[r]={Alias=u.Alias}
+for v,x in p do
+local z=NormalizeDescriptor(x)
+if z then
+u.Icons[v]=z
+u.Spritesheets[z.Image]=z.Image
+elseif typeof(x)=="table"and x.Alias then
+u.Icons[v]={Alias=x.Alias}
 else
-warn(string.format("[ WindUI.Icons ] Ignored invalid icon '%s:%s'",m,tostring(r)))
+warn(string.format("[ WindUI.Icons ] Ignored invalid icon '%s:%s'",r,tostring(v)))
 end
 end
 
-return f
+return h
 end
 
-f.RegisterIconPack=f.AddIcons
-f.AddIconSource=f.RegisterIconSource
+h.RegisterIconPack=h.AddIcons
+h.AddIconSource=h.RegisterIconSource
 
-function f.AddIcon(j,l,m)
-return f.AddIcons(j,{[l]=m})
-end
-
-function f.SetIconsType(j)
-local l=ResolveSourceAlias(j)
-assert(l,"SetIconsType: icon type must be a non-empty string")
-f.IconsType=l
-return f
+function h.AddIcon(m,p,r)
+return h.AddIcons(m,{[p]=r})
 end
 
-function f.GetIconSources()
-local j=GetSourceNames()
-for l in f.Resolvers do
-if not table.find(j,l)then
-table.insert(j,l)
-end
-end
-table.sort(j)
-return j
+function h.SetIconsType(m)
+local p=ResolveSourceAlias(m)
+assert(p,"SetIconsType: icon type must be a non-empty string")
+h.IconsType=p
+return h
 end
 
-function f.HasIcon(j,l)
-return i(j,l,0)~=nil
+function h.GetIconSources()
+local m=GetSourceNames()
+for p in h.Resolvers do
+if not table.find(m,p)then
+table.insert(m,p)
+end
+end
+table.sort(m)
+return m
 end
 
-function f.Init(j,l)
-f.New=j
-f.IconThemeTag=l
-h=j
-return f
+function h.HasIcon(m,p)
+return l(m,p,0)~=nil
 end
 
-function f.Icon(j,l,m)
-return FormatDescriptor(i(j,l,0),m~=false)
+function h.Init(m,p)
+h.New=m
+h.IconThemeTag=p
+j=m
+return h
 end
 
-function f.GetIcon(j,l)
-return f.Icon(j,l,false)
+function h.Icon(m,p,r)
+return FormatDescriptor(l(m,p,0),r~=false)
 end
 
-function f.Icon2(j,l)
-return f.Icon(j,l,true)
+function h.GetIcon(m,p)
+return h.Icon(m,p,false)
 end
 
-local function ResolveStyle(j,l,m)
-local p=j[l]
-if p==nil then
-p=j[1]
+function h.Icon2(m,p)
+return h.Icon(m,p,true)
 end
-if p==nil then
-p=m
+
+local function ResolveStyle(m,p,r)
+local u=m[p]
+if u==nil then
+u=m[1]
+end
+if u==nil then
+u=r
 end
 
 return{
-ThemeTag=typeof(p)=="string"and p or nil,
-Color=typeof(p)=="Color3"and p or nil,
-Value=typeof(p)=="number"and p or nil,
+ThemeTag=typeof(u)=="string"and u or nil,
+Color=typeof(u)=="Color3"and u or nil,
+Value=typeof(u)=="number"and u or nil,
 }
 end
 
-local function CreateImageLabel(j)
-if h then
-return h("ImageLabel",j)
+local function CreateImageLabel(m)
+if j then
+return j("ImageLabel",m)
 end
 
-local l=Instance.new"ImageLabel"
-for m,p in j do
-if m~="ThemeTag"and p~=nil then
-l[m]=p
+local p=Instance.new"ImageLabel"
+for r,u in m do
+if r~="ThemeTag"and u~=nil then
+p[r]=u
 end
 end
-return l
+return p
 end
 
-function f.Image(j)
-j=if typeof(j)=="table"then j else{}
-local l={
-Icon=j.Icon,
-Type=j.Type,
-Colors=j.Colors or{f.IconThemeTag or Color3.new(1,1,1)},
-Transparency=j.Transparency or{0},
-Size=j.Size or UDim2.fromOffset(24,24),
+function h.Image(m)
+m=if typeof(m)=="table"then m else{}
+local p={
+Icon=m.Icon,
+Type=m.Type,
+Colors=m.Colors or{h.IconThemeTag or Color3.new(1,1,1)},
+Transparency=m.Transparency or{0},
+Size=m.Size or UDim2.fromOffset(24,24),
 IconFrame=nil,
 }
 
-local m=f.Icon2(l.Icon,l.Type)
-local p=m and m[1]or""
-local r=m and m[2]
+local r=h.Icon2(p.Icon,p.Type)
+local u=r and r[1]or""
+local v=r and r[2]
 or{
 ImageRectSize=Vector2.zero,
 ImageRectPosition=Vector2.zero,
 }
-local u=ResolveStyle(l.Colors,1,f.IconThemeTag or Color3.new(1,1,1))
-local v=ResolveStyle(l.Transparency,1,0)
+local x=ResolveStyle(p.Colors,1,h.IconThemeTag or Color3.new(1,1,1))
+local z=ResolveStyle(p.Transparency,1,0)
 
-local x=CreateImageLabel{
+local A=CreateImageLabel{
 Name="Icon",
-Size=l.Size,
+Size=p.Size,
 BackgroundTransparency=1,
-ImageColor3=u.Color,
-ImageTransparency=v.Value,
-ThemeTag=u.ThemeTag and{
-ImageColor3=u.ThemeTag,
-ImageTransparency=v.ThemeTag,
+ImageColor3=x.Color,
+ImageTransparency=z.Value,
+ThemeTag=x.ThemeTag and{
+ImageColor3=x.ThemeTag,
+ImageTransparency=z.ThemeTag,
 }or nil,
-Image=p,
-ImageRectSize=r.ImageRectSize,
-ImageRectOffset=r.ImageRectPosition,
+Image=u,
+ImageRectSize=v.ImageRectSize,
+ImageRectOffset=v.ImageRectPosition,
 }
 
-local z=ParseIconReference(l.Icon)
-for A,B in r.Parts or{}do
-local C=f.Icon2(B,z or l.Type)
-if C then
-local F=ResolveStyle(l.Colors,A+1,u.Color or u.ThemeTag)
-local G=ResolveStyle(l.Transparency,A+1,v.Value or 0)
+local B=ParseIconReference(p.Icon)
+for C,F in v.Parts or{}do
+local G=h.Icon2(F,B or p.Type)
+if G then
+local H=ResolveStyle(p.Colors,C+1,x.Color or x.ThemeTag)
+local J=ResolveStyle(p.Transparency,C+1,z.Value or 0)
 CreateImageLabel{
-Name="Part"..tostring(A),
+Name="Part"..tostring(C),
 Size=UDim2.fromScale(1,1),
 BackgroundTransparency=1,
-ImageColor3=F.Color,
-ImageTransparency=G.Value,
-ThemeTag=F.ThemeTag and{
-ImageColor3=F.ThemeTag,
-ImageTransparency=G.ThemeTag,
+ImageColor3=H.Color,
+ImageTransparency=J.Value,
+ThemeTag=H.ThemeTag and{
+ImageColor3=H.ThemeTag,
+ImageTransparency=J.ThemeTag,
 }or nil,
-Image=C[1],
-ImageRectSize=C[2].ImageRectSize,
-ImageRectOffset=C[2].ImageRectPosition,
-Parent=x,
+Image=G[1],
+ImageRectSize=G[2].ImageRectSize,
+ImageRectOffset=G[2].ImageRectPosition,
+Parent=A,
 }
 end
 end
 
-l.IconFrame=x
-return l
+p.IconFrame=A
+return p
 end
 
-return f end function a.c()
+return h end function a.c()
 
 return function(b)
 return{
@@ -931,33 +971,24 @@ local f=b(game:GetService"TweenService")
 local g=b(game:GetService"LocalizationService")
 local h=b(game:GetService"HttpService")
 
-local i=a.load'a'local j=
+local i=a.load'a'
+local j=a.load'b'local l=
 
 d.Heartbeat
 
-local l="https://article-hub-studio.github.io/WindUI-Skibidi/vendor/icons/Main-v2.lua"
+j.SetIconsType"lucide"
 
 local m
-if d:IsStudio()or not writefile then
-m=a.load'b'
-else
-m=loadstring(
-game.HttpGet and game:HttpGet(l)or h:GetAsync(l)
-)()
-end
-
-m.SetIconsType"lucide"
 
 local p
-
-local r
-r={
+p={
 Font="rbxassetid://12187365364",
 Localization=nil,
 CanDraggable=true,
 Theme=nil,
 Themes=nil,
-Icons=m,
+Icons=j,
+IconAdapterVersion=j.AdapterVersion or 1,
 Signals={},
 Objects={},
 LocalizationObjects={},
@@ -1056,44 +1087,44 @@ ThemeFallbacks=nil,
 ThemeChangeCallbacks={},
 }
 
-function r.Init(u)
-p=u
+function p.Init(r)
+m=r
 
-r.ThemeFallbacks=a.load'c'(r)
+p.ThemeFallbacks=a.load'c'(p)
 
-r.UIScale=u.UIScale
+p.UIScale=r.UIScale
 
-i:Init(r)
+i:Init(p)
 end
 
-function r.AddSignal(u,v)
-local x=u:Connect(v)
-table.insert(r.Signals,x)
-return x
+function p.AddSignal(r,u)
+local v=r:Connect(u)
+table.insert(p.Signals,v)
+return v
 end
 
-function r.DisconnectAll()
-for u,v in next,r.Signals do
-local x=table.remove(r.Signals,u)
-x:Disconnect()
+function p.DisconnectAll()
+for r,u in next,p.Signals do
+local v=table.remove(p.Signals,r)
+v:Disconnect()
 end
 end
 
-function r.SafeCallback(u,...)
-if not u then
+function p.SafeCallback(r,...)
+if not r then
 return
 end
 
-local v,x=pcall(u,...)
-if not v then
-if p and p.Window and p.Window.Debug then local
-z, A=x:find":%d+: "
+local u,v=pcall(r,...)
+if not u then
+if m and m.Window and m.Window.Debug then local
+x, z=v:find":%d+: "
 
-warn("[ WindUI: DEBUG Mode ] "..x)
+warn("[ WindUI: DEBUG Mode ] "..v)
 
-return p:Notify{
+return m:Notify{
 Title="DEBUG Mode: Error",
-Content=not A and x or x:sub(A+1),
+Content=not z and v or v:sub(z+1),
 Style="Error",
 Duration=8,
 }
@@ -1101,474 +1132,474 @@ end
 end
 end
 
-function r.Gradient(u,v)
-if p and p.Gradient then
-return p:Gradient(u,v)
+function p.Gradient(r,u)
+if m and m.Gradient then
+return m:Gradient(r,u)
 end
 
+local v={}
 local x={}
-local z={}
 
-for A,B in next,u do
-local C=tonumber(A)
-if C then
-C=math.clamp(C/100,0,1)
-table.insert(x,ColorSequenceKeypoint.new(C,B.Color))
-table.insert(z,NumberSequenceKeypoint.new(C,B.Transparency or 0))
+for z,A in next,r do
+local B=tonumber(z)
+if B then
+B=math.clamp(B/100,0,1)
+table.insert(v,ColorSequenceKeypoint.new(B,A.Color))
+table.insert(x,NumberSequenceKeypoint.new(B,A.Transparency or 0))
 end
 end
 
-table.sort(x,function(A,B)
-return A.Time<B.Time
+table.sort(v,function(z,A)
+return z.Time<A.Time
 end)
-table.sort(z,function(A,B)
-return A.Time<B.Time
+table.sort(x,function(z,A)
+return z.Time<A.Time
 end)
 
-if#x<2 then
+if#v<2 then
 error"ColorSequence requires at least 2 keypoints"
 end
 
-local A={
-Color=ColorSequence.new(x),
-Transparency=NumberSequence.new(z),
+local z={
+Color=ColorSequence.new(v),
+Transparency=NumberSequence.new(x),
 }
 
-if v then
-for B,C in pairs(v)do
-A[B]=C
-end
-end
-
-return A
-end
-
-function r.SetTheme(u)
-if typeof(u)~="table"then
-u=r.Theme or(r.Themes and r.Themes.Dark)
-end
-if typeof(u)~="table"then
-return nil
-end
-
-local v=r.Theme
-r.Theme=u
-r.UpdateTheme(nil,false)
-
-for x,z in next,r.ThemeChangeCallbacks do
-r.SafeCallback(z,u,v)
-end
-
-return u
-end
-
-function r.AddFontObject(u)
-table.insert(r.FontObjects,u)
-r.UpdateFont(r.Font)
-end
-
-function r.UpdateFont(u)
-r.Font=u
-for v,x in next,r.FontObjects do
-x.FontFace=Font.new(u,x.FontFace.Weight,x.FontFace.Style)
-end
-end
-
-function r.GetThemeProperty(u,v)
-local function getValue(x,z)
-if typeof(z)~="table"then
-return nil
-end
-
-local A=z[x]
-
-if A==nil then
-return nil
-end
-
-if typeof(A)=="string"and string.sub(A,1,1)=="#"then
-return Color3.fromHex(A)
-end
-
-if typeof(A)=="Color3"then
-return A
-end
-
-if typeof(A)=="number"then
-return A
-end
-
-if typeof(A)=="table"and A.Color and A.Transparency then
-return A
-end
-
-if typeof(A)=="function"then
-return A(z)
-end
-
-return A
-end
-
-v=if typeof(v)=="table"then v else r.Theme
-
-local x=getValue(u,v)
-if x~=nil then
-if typeof(x)=="string"and string.sub(x,1,1)~="#"then
-local z=r.GetThemeProperty(x,v)
-if z~=nil then
-return z
-end
-else
-return x
-end
-end
-
-local z=r.ThemeFallbacks and r.ThemeFallbacks[u]
-if z~=nil then
-if typeof(z)=="string"and string.sub(z,1,1)~="#"then
-return r.GetThemeProperty(z,v)
-else
-return getValue(u,{[u]=z})
-end
-end
-
-local A=r.Themes and r.Themes.Dark
-x=getValue(u,A)
-if x~=nil then
-if typeof(x)=="string"and string.sub(x,1,1)~="#"then
-local B=r.GetThemeProperty(x,A)
-if B~=nil then
-return B
-end
-else
-return x
-end
-end
-
-if z~=nil then
-if typeof(z)=="string"and string.sub(z,1,1)~="#"then
-return r.GetThemeProperty(z,A)
-else
-return getValue(u,{[u]=z})
-end
-end
-
-return nil
-end
-
-function r.AddThemeObject(u,v,x)
-if r.Objects[u]then
-for z,A in pairs(v)do
-r.Objects[u].Properties[z]=A
-end
-else
-r.Objects[u]={Object=u,Properties=v}
-end
-
-if not x then
-r.UpdateTheme(u,false)
-end
-return u
-end
-
-function r.AddLangObject(u)
-local v=r.LocalizationObjects[u]
-if not v then
-return
-end
-
-local x=v.Object
-
-r.SetLangForObject(u)
-
-return x
-end
-
-function r.UpdateTheme(u,v,x,z,A,B)
-local function ApplyTheme(C)
-for F,G in pairs(C.Properties or{})do
-local H=r.GetThemeProperty(G,r.Theme)
-if H~=nil then
-if typeof(H)=="Color3"then
-local J=C.Object:FindFirstChild"LibraryGradient"
-if J then
-J:Destroy()
-end
-
-if x then
-r.Tween(
-C.Object,
-z or 0.2,
-{[F]=H},
-A or Enum.EasingStyle.Quint,
-B or Enum.EasingDirection.Out
-):Play()
-elseif v then
-r.Tween(C.Object,0.08,{[F]=H}):Play()
-else
-C.Object[F]=H
-end
-elseif typeof(H)=="table"and H.Color and H.Transparency then
-C.Object[F]=Color3.new(1,1,1)
-
-local J=C.Object:FindFirstChild"LibraryGradient"
-if not J then
-J=Instance.new"UIGradient"
-J.Name="LibraryGradient"
-J.Parent=C.Object
-end
-
-J.Color=H.Color
-J.Transparency=H.Transparency
-
-for L,M in pairs(H)do
-if L~="Color"and L~="Transparency"and J[L]~=nil then
-J[L]=M
-end
-end
-elseif typeof(H)=="number"then
-if x then
-r.Tween(
-C.Object,
-z or 0.2,
-{[F]=H},
-A or Enum.EasingStyle.Quint,
-B or Enum.EasingDirection.Out
-):Play()
-elseif v then
-r.Tween(C.Object,0.08,{[F]=H}):Play()
-else
-C.Object[F]=H
-end
-end
-else
-local J=C.Object:FindFirstChild"LibraryGradient"
-if J then
-J:Destroy()
-end
-end
-end
-end
-
 if u then
-local C=r.Objects[u]
-if C then
-ApplyTheme(C)
-end
-else
-for C,F in pairs(r.Objects)do
-ApplyTheme(F)
-end
-end
-end
-
-function r.SetThemeTag(u,v,x,z,A)
-r.AddThemeObject(u,v)
-r.UpdateTheme(u,false,true,x,z,A)
-end
-
-function r.SetLangForObject(u)
-if r.Localization and r.Localization.Enabled then
-local v=r.LocalizationObjects[u]
-if not v then
-return
-end
-
-local x=v.Object
-local z=v.TranslationId
-
-local A=r.Localization.Translations[r.Language]
-if A and A[z]then
-x.Text=A[z]
-else
-local B=r.Localization
-and r.Localization.Translations
-and r.Localization.Translations.en
-or nil
-if B and B[z]then
-x.Text=B[z]
-else
-x.Text="["..z.."]"
-end
-end
-end
-end
-
-function r.ChangeTranslationKey(u,v,x)
-if r.Localization and r.Localization.Enabled then
-local z=string.match(x,"^"..r.Localization.Prefix.."(.+)")
-if z then
-for A,B in ipairs(r.LocalizationObjects)do
-if B.Object==v then
-B.TranslationId=z
-r.SetLangForObject(A)
-return
-end
-end
-
-table.insert(r.LocalizationObjects,{
-TranslationId=z,
-Object=v,
-})
-r.SetLangForObject(#r.LocalizationObjects)
-end
-end
-end
-
-function r.UpdateLang(u)
-if u then
-r.Language=u
-end
-
-for v=1,#r.LocalizationObjects do
-local x=r.LocalizationObjects[v]
-if x.Object and x.Object.Parent~=nil then
-r.SetLangForObject(v)
-else
-r.LocalizationObjects[v]=nil
-end
-end
-end
-
-function r.SetLanguage(u)
-r.Language=u
-r.UpdateLang()
-end
-
-function r.Icon(u,v)
-return m.Icon(u,nil,v~=false)
-end
-
-function r.AddIcons(u,v)
-return m.AddIcons(u,v)
-end
-
-function r.AddIcon(u,v,x)
-return m.AddIcon(u,v,x)
-end
-
-function r.RegisterIconSource(u,v,x)
-return m.RegisterIconSource(u,v,x)
-end
-
-r.RegisterIconPack=r.AddIcons
-r.AddIconSource=r.RegisterIconSource
-
-function r.AddIconSourceAlias(u,v)
-return m.AddSourceAlias(u,v)
-end
-
-function r.SetIconSource(u)
-return m.SetIconsType(u)
-end
-
-function r.GetIconSources()
-return m.GetIconSources()
-end
-
-function r.HasIcon(u,v)
-return m.HasIcon(u,v)
-end
-
-function r.New(u,v,x)
-local z=Instance.new(u)
-
-for A,B in next,r.DefaultProperties[u]or{}do
+for A,B in pairs(u)do
 z[A]=B
 end
-
-for A,B in next,v or{}do
-if A~="ThemeTag"then
-z[A]=B
-end
-if r.Localization and r.Localization.Enabled and A=="Text"then
-local C=string.match(B,"^"..r.Localization.Prefix.."(.+)")
-if C then
-local F=#r.LocalizationObjects+1
-r.LocalizationObjects[F]={TranslationId=C,Object=z}
-
-r.SetLangForObject(F)
-end
-end
 end
 
-for A,B in next,x or{}do
-B.Parent=z
-end
-
-if v and v.ThemeTag then
-r.AddThemeObject(z,v.ThemeTag)
-end
-if v and v.FontFace then
-r.AddFontObject(z)
-end
 return z
 end
 
-function r.Tween(u,v,x,...)
-return f:Create(u,TweenInfo.new(v,...),x)
+function p.SetTheme(r)
+if typeof(r)~="table"then
+r=p.Theme or(p.Themes and p.Themes.Dark)
+end
+if typeof(r)~="table"then
+return nil
 end
 
-function r.ClampTransparency(u,v)
-local x=tonumber(u)
-if x==nil then
+local u=p.Theme
+p.Theme=r
+p.UpdateTheme(nil,false)
+
+for v,x in next,p.ThemeChangeCallbacks do
+p.SafeCallback(x,r,u)
+end
+
+return r
+end
+
+function p.AddFontObject(r)
+table.insert(p.FontObjects,r)
+p.UpdateFont(p.Font)
+end
+
+function p.UpdateFont(r)
+p.Font=r
+for u,v in next,p.FontObjects do
+v.FontFace=Font.new(r,v.FontFace.Weight,v.FontFace.Style)
+end
+end
+
+function p.GetThemeProperty(r,u)
+local function getValue(v,x)
+if typeof(x)~="table"then
+return nil
+end
+
+local z=x[v]
+
+if z==nil then
+return nil
+end
+
+if typeof(z)=="string"and string.sub(z,1,1)=="#"then
+return Color3.fromHex(z)
+end
+
+if typeof(z)=="Color3"then
+return z
+end
+
+if typeof(z)=="number"then
+return z
+end
+
+if typeof(z)=="table"and z.Color and z.Transparency then
+return z
+end
+
+if typeof(z)=="function"then
+return z(x)
+end
+
+return z
+end
+
+u=if typeof(u)=="table"then u else p.Theme
+
+local v=getValue(r,u)
+if v~=nil then
+if typeof(v)=="string"and string.sub(v,1,1)~="#"then
+local x=p.GetThemeProperty(v,u)
+if x~=nil then
+return x
+end
+else
+return v
+end
+end
+
+local x=p.ThemeFallbacks and p.ThemeFallbacks[r]
+if x~=nil then
+if typeof(x)=="string"and string.sub(x,1,1)~="#"then
+return p.GetThemeProperty(x,u)
+else
+return getValue(r,{[r]=x})
+end
+end
+
+local z=p.Themes and p.Themes.Dark
+v=getValue(r,z)
+if v~=nil then
+if typeof(v)=="string"and string.sub(v,1,1)~="#"then
+local A=p.GetThemeProperty(v,z)
+if A~=nil then
+return A
+end
+else
+return v
+end
+end
+
+if x~=nil then
+if typeof(x)=="string"and string.sub(x,1,1)~="#"then
+return p.GetThemeProperty(x,z)
+else
+return getValue(r,{[r]=x})
+end
+end
+
+return nil
+end
+
+function p.AddThemeObject(r,u,v)
+if p.Objects[r]then
+for x,z in pairs(u)do
+p.Objects[r].Properties[x]=z
+end
+else
+p.Objects[r]={Object=r,Properties=u}
+end
+
+if not v then
+p.UpdateTheme(r,false)
+end
+return r
+end
+
+function p.AddLangObject(r)
+local u=p.LocalizationObjects[r]
+if not u then
+return
+end
+
+local v=u.Object
+
+p.SetLangForObject(r)
+
 return v
 end
 
-return math.clamp(x,0,1)
+function p.UpdateTheme(r,u,v,x,z,A)
+local function ApplyTheme(B)
+for C,F in pairs(B.Properties or{})do
+local G=p.GetThemeProperty(F,p.Theme)
+if G~=nil then
+if typeof(G)=="Color3"then
+local H=B.Object:FindFirstChild"LibraryGradient"
+if H then
+H:Destroy()
 end
 
-function r.ToUDimRadius(u,v)
+if v then
+p.Tween(
+B.Object,
+x or 0.2,
+{[C]=G},
+z or Enum.EasingStyle.Quint,
+A or Enum.EasingDirection.Out
+):Play()
+elseif u then
+p.Tween(B.Object,0.08,{[C]=G}):Play()
+else
+B.Object[C]=G
+end
+elseif typeof(G)=="table"and G.Color and G.Transparency then
+B.Object[C]=Color3.new(1,1,1)
+
+local H=B.Object:FindFirstChild"LibraryGradient"
+if not H then
+H=Instance.new"UIGradient"
+H.Name="LibraryGradient"
+H.Parent=B.Object
+end
+
+H.Color=G.Color
+H.Transparency=G.Transparency
+
+for J,L in pairs(G)do
+if J~="Color"and J~="Transparency"and H[J]~=nil then
+H[J]=L
+end
+end
+elseif typeof(G)=="number"then
+if v then
+p.Tween(
+B.Object,
+x or 0.2,
+{[C]=G},
+z or Enum.EasingStyle.Quint,
+A or Enum.EasingDirection.Out
+):Play()
+elseif u then
+p.Tween(B.Object,0.08,{[C]=G}):Play()
+else
+B.Object[C]=G
+end
+end
+else
+local H=B.Object:FindFirstChild"LibraryGradient"
+if H then
+H:Destroy()
+end
+end
+end
+end
+
+if r then
+local B=p.Objects[r]
+if B then
+ApplyTheme(B)
+end
+else
+for B,C in pairs(p.Objects)do
+ApplyTheme(C)
+end
+end
+end
+
+function p.SetThemeTag(r,u,v,x,z)
+p.AddThemeObject(r,u)
+p.UpdateTheme(r,false,true,v,x,z)
+end
+
+function p.SetLangForObject(r)
+if p.Localization and p.Localization.Enabled then
+local u=p.LocalizationObjects[r]
+if not u then
+return
+end
+
+local v=u.Object
+local x=u.TranslationId
+
+local z=p.Localization.Translations[p.Language]
+if z and z[x]then
+v.Text=z[x]
+else
+local A=p.Localization
+and p.Localization.Translations
+and p.Localization.Translations.en
+or nil
+if A and A[x]then
+v.Text=A[x]
+else
+v.Text="["..x.."]"
+end
+end
+end
+end
+
+function p.ChangeTranslationKey(r,u,v)
+if p.Localization and p.Localization.Enabled then
+local x=string.match(v,"^"..p.Localization.Prefix.."(.+)")
+if x then
+for z,A in ipairs(p.LocalizationObjects)do
+if A.Object==u then
+A.TranslationId=x
+p.SetLangForObject(z)
+return
+end
+end
+
+table.insert(p.LocalizationObjects,{
+TranslationId=x,
+Object=u,
+})
+p.SetLangForObject(#p.LocalizationObjects)
+end
+end
+end
+
+function p.UpdateLang(r)
+if r then
+p.Language=r
+end
+
+for u=1,#p.LocalizationObjects do
+local v=p.LocalizationObjects[u]
+if v.Object and v.Object.Parent~=nil then
+p.SetLangForObject(u)
+else
+p.LocalizationObjects[u]=nil
+end
+end
+end
+
+function p.SetLanguage(r)
+p.Language=r
+p.UpdateLang()
+end
+
+function p.Icon(r,u)
+return j.Icon(r,nil,u~=false)
+end
+
+function p.AddIcons(r,u)
+return j.AddIcons(r,u)
+end
+
+function p.AddIcon(r,u,v)
+return j.AddIcon(r,u,v)
+end
+
+function p.RegisterIconSource(r,u,v)
+return j.RegisterIconSource(r,u,v)
+end
+
+p.RegisterIconPack=p.AddIcons
+p.AddIconSource=p.RegisterIconSource
+
+function p.AddIconSourceAlias(r,u)
+return j.AddSourceAlias(r,u)
+end
+
+function p.SetIconSource(r)
+return j.SetIconsType(r)
+end
+
+function p.GetIconSources()
+return j.GetIconSources()
+end
+
+function p.HasIcon(r,u)
+return j.HasIcon(r,u)
+end
+
+function p.New(r,u,v)
+local x=Instance.new(r)
+
+for z,A in next,p.DefaultProperties[r]or{}do
+x[z]=A
+end
+
+for z,A in next,u or{}do
+if z~="ThemeTag"then
+x[z]=A
+end
+if p.Localization and p.Localization.Enabled and z=="Text"then
+local B=string.match(A,"^"..p.Localization.Prefix.."(.+)")
+if B then
+local C=#p.LocalizationObjects+1
+p.LocalizationObjects[C]={TranslationId=B,Object=x}
+
+p.SetLangForObject(C)
+end
+end
+end
+
+for z,A in next,v or{}do
+A.Parent=x
+end
+
+if u and u.ThemeTag then
+p.AddThemeObject(x,u.ThemeTag)
+end
+if u and u.FontFace then
+p.AddFontObject(x)
+end
+return x
+end
+
+function p.Tween(r,u,v,...)
+return f:Create(r,TweenInfo.new(u,...),v)
+end
+
+function p.ClampTransparency(r,u)
+local v=tonumber(r)
+if v==nil then
+return u
+end
+
+return math.clamp(v,0,1)
+end
+
+function p.ToUDimRadius(r,u)
+if typeof(r)=="UDim"then
+return r
+end
+
 if typeof(u)=="UDim"then
 return u
 end
 
-if typeof(v)=="UDim"then
-return v
+return UDim.new(0,tonumber(r)or tonumber(u)or 0)
 end
 
-return UDim.new(0,tonumber(u)or tonumber(v)or 0)
+function p.ApplyCornerRadii(r,u,v)
+if typeof(r)~="Instance"or not r:IsA"UICorner"then
+return r
 end
 
-function r.ApplyCornerRadii(u,v,x)
-if typeof(u)~="Instance"or not u:IsA"UICorner"then
-return u
-end
-
-local z=r.ToUDimRadius(v,u.CornerRadius)
-local A=x
+local x=p.ToUDimRadius(u,r.CornerRadius)
+local z=v
 or{
 TopLeft=true,
 TopRight=true,
 BottomLeft=true,
 BottomRight=true,
 }
-local function ResolveCorner(B)
-if B==false then
+local function ResolveCorner(A)
+if A==false then
 return UDim.new(0,0)
 end
-if typeof(B)=="UDim"then
-return B
+if typeof(A)=="UDim"then
+return A
 end
-if type(B)=="number"then
-return UDim.new(0,math.max(B,0))
+if type(A)=="number"then
+return UDim.new(0,math.max(A,0))
 end
-return z
+return x
 end
 
-u.CornerRadius=z
+r.CornerRadius=x
 
 pcall(function()
-u.TopLeftRadius=ResolveCorner(A.TopLeft)
-u.TopRightRadius=ResolveCorner(A.TopRight)
-u.BottomRightRadius=ResolveCorner(A.BottomRight)
-u.BottomLeftRadius=ResolveCorner(A.BottomLeft)
+r.TopLeftRadius=ResolveCorner(z.TopLeft)
+r.TopRightRadius=ResolveCorner(z.TopRight)
+r.BottomRightRadius=ResolveCorner(z.BottomRight)
+r.BottomLeftRadius=ResolveCorner(z.BottomLeft)
 end)
 
-return u
+return r
 end
 
-function r.DefaultCornerMap()
+function p.DefaultCornerMap()
 return{
 TopLeft=true,
 TopRight=true,
@@ -1577,31 +1608,31 @@ BottomRight=true,
 }
 end
 
-function r.GetLinkedCornerDirection(u,v,x)
-if typeof(x)=="table"then
-local z=tostring(x.Orientation or x.Direction or""):lower()
-if z=="horizontal"or z=="row"or z=="x"then
+function p.GetLinkedCornerDirection(r,u,v)
+if typeof(v)=="table"then
+local x=tostring(v.Orientation or v.Direction or""):lower()
+if x=="horizontal"or x=="row"or x=="x"then
 return true
-elseif z=="vertical"or z=="column"or z=="y"then
+elseif x=="vertical"or x=="column"or x=="y"then
 return false
 end
 end
 
-local z=v or(u and u.__type)
+local x=u or(r and r.__type)
 
-if z=="Group"then
+if x=="Group"then
 return true
 end
 
-if z=="HStack"then
-if u and u.IsStacked==true then
+if x=="HStack"then
+if r and r.IsStacked==true then
 return false
 end
 
-local A=u and u.ElementFrame
-local B=A and A:FindFirstChildWhichIsA"UIListLayout"
-if B then
-return B.FillDirection==Enum.FillDirection.Horizontal
+local z=r and r.ElementFrame
+local A=z and z:FindFirstChildWhichIsA"UIListLayout"
+if A then
+return A.FillDirection==Enum.FillDirection.Horizontal
 end
 
 return true
@@ -1610,12 +1641,12 @@ end
 return false
 end
 
-function r.GetLinkedCornerShape(u,v,x,z,A)
-return r:GetElementPosition(
+function p.GetLinkedCornerShape(r,u,v,x,z)
+return p:GetElementPosition(
+r,
 u,
-v,
-r.GetLinkedCornerDirection(x,z,A),
-A
+p.GetLinkedCornerDirection(v,x,z),
+z
 )
 end
 
@@ -1690,548 +1721,548 @@ end
 
 
 
-function r.NewRoundFrame(u,v,x,z,A,B)
-return i:New(u,v,x,z,A,nil)
+function p.NewRoundFrame(r,u,v,x,z,A)
+return i:New(r,u,v,x,z,nil)
 end
 
-local u=r.New local v=
-r.Tween
+local r=p.New local u=
+p.Tween
 
-function r.SetDraggable(x)
-r.CanDraggable=x
+function p.SetDraggable(v)
+p.CanDraggable=v
 end
 
-function r.Drag(x,z,A)
-local B=p.GenerateGUID()
+function p.Drag(v,x,z)
+local A=m.GenerateGUID()
 
-local C
-local F=false
-local G,H
-local J
+local B
+local C=false
+local F,G
+local H
 
-local L={
+local J={
 CanDraggable=true,
 }
 
-if not z or typeof(z)~="table"then
-z={x}
+if not x or typeof(x)~="table"then
+x={v}
 end
 
-local function update(M)
-if not F or not L.CanDraggable then
+local function update(L)
+if not C or not J.CanDraggable then
 return
 end
 
-local N=M.Position-G
-r.Tween(x,0.02,{
+local M=L.Position-F
+p.Tween(v,0.02,{
 Position=UDim2.new(
-H.X.Scale,
-H.X.Offset+N.X,
-H.Y.Scale,
-H.Y.Offset+N.Y
+G.X.Scale,
+G.X.Offset+M.X,
+G.Y.Scale,
+G.Y.Offset+M.Y
 ),
 }):Play()
 end
 
-for M,N in pairs(z)do
-N.InputBegan:Connect(function(O)
-if not L.CanDraggable or F then
+for L,M in pairs(x)do
+M.InputBegan:Connect(function(N)
+if not J.CanDraggable or C then
 return
 end
 
 if
-O.UserInputType==Enum.UserInputType.MouseButton1
-or O.UserInputType==Enum.UserInputType.Touch
+N.UserInputType==Enum.UserInputType.MouseButton1
+or N.UserInputType==Enum.UserInputType.Touch
 then
-if p and p.CurrentInput and p.CurrentInput~=B then
+if m and m.CurrentInput and m.CurrentInput~=A then
 return
 end
 
-p.CurrentInput=B
+m.CurrentInput=A
 
-F=true
-J=O
-C=N
-G=O.Position
-H=x.Position
+C=true
+H=N
+B=M
+F=N.Position
+G=v.Position
 
-if A and typeof(A)=="function"then
-A(true,C)
+if z and typeof(z)=="function"then
+z(true,B)
 end
 end
 end)
 end
 
-e.InputChanged:Connect(function(M)
-if not F then
+e.InputChanged:Connect(function(L)
+if not C then
 return
 end
-if p.CurrentInput and p.CurrentInput~=B then
+if m.CurrentInput and m.CurrentInput~=A then
 return
 end
 
-if J.UserInputType==Enum.UserInputType.MouseButton1 then
-if M.UserInputType==Enum.UserInputType.MouseMovement then
-update(M)
+if H.UserInputType==Enum.UserInputType.MouseButton1 then
+if L.UserInputType==Enum.UserInputType.MouseMovement then
+update(L)
 end
-elseif J.UserInputType==Enum.UserInputType.Touch then
-if M==J then
-update(M)
+elseif H.UserInputType==Enum.UserInputType.Touch then
+if L==H then
+update(L)
 end
 end
 end)
 
-e.InputEnded:Connect(function(M)
-if not F or p.CurrentInput~=B then
+e.InputEnded:Connect(function(L)
+if not C or m.CurrentInput~=A then
 return
 end
 
 if
-M==J
+L==H
 or(
-J.UserInputType==Enum.UserInputType.MouseButton1
-and M.UserInputType==Enum.UserInputType.MouseButton1
+H.UserInputType==Enum.UserInputType.MouseButton1
+and L.UserInputType==Enum.UserInputType.MouseButton1
 )
 then
-p.CurrentInput=nil
-F=false
-J=nil
-C=nil
+m.CurrentInput=nil
+C=false
+H=nil
+B=nil
 
-if A and typeof(A)=="function"then
-A(false,nil)
+if z and typeof(z)=="function"then
+z(false,nil)
 end
 end
 end)
 
-function L.Set(M,N)
-L.CanDraggable=N
+function J.Set(L,M)
+J.CanDraggable=M
 end
 
-return L
+return J
 end
 
-m.Init(u,"Icon")
+j.Init(r,"Icon")
 
-function r.SanitizeFilename(x)
-local z=x:match"([^/]+)$"or x
+function p.SanitizeFilename(v)
+local x=v:match"([^/]+)$"or v
 
-z=z:gsub("%.[^%.]+$","")
+x=x:gsub("%.[^%.]+$","")
 
-z=z:gsub("[^%w%-_]","_")
+x=x:gsub("[^%w%-_]","_")
 
-if#z>50 then
-z=z:sub(1,50)
+if#x>50 then
+x=x:sub(1,50)
 end
 
-return z
+return x
 end
 
-function r.Image(x,z,A,B,C,F,G,H)
-local J=if typeof(B)=="table"then B.Folder else B
-J=tostring(J or"Temp")
-z=r.SanitizeFilename(tostring(z or"Image"))
-C=tostring(C or"Image")
+function p.Image(v,x,z,A,B,C,F,G)
+local H=if typeof(A)=="table"then A.Folder else A
+H=tostring(H or"Temp")
+x=p.SanitizeFilename(tostring(x or"Image"))
+B=tostring(B or"Image")
 
-local L=type(x)=="string"
-and x:match"^https?://"~=nil
-and x:find("roblox.com",1,true)==nil
-local M=if L or typeof(x)=="Instance"then nil else r.Icon(x)
-local N=(M or G)and F and(H or"Icon")or nil
+local J=type(v)=="string"
+and v:match"^https?://"~=nil
+and v:find("roblox.com",1,true)==nil
+local L=if J or typeof(v)=="Instance"then nil else p.Icon(v)
+local M=(L or F)and C and(G or"Icon")or nil
 
-local O=u("Frame",{
+local N=r("Frame",{
 Size=UDim2.new(0,0,0,0),
 BackgroundTransparency=1,
 },{
-u("ImageLabel",{
+r("ImageLabel",{
 Name="ImageLabel",
 Size=UDim2.fromScale(1,1),
 BackgroundTransparency=1,
 ScaleType=Enum.ScaleType.Crop,
-ThemeTag=N and{
-ImageColor3=N,
+ThemeTag=M and{
+ImageColor3=M,
 }or nil,
 },{
-u("UICorner",{
-CornerRadius=UDim.new(0,tonumber(A)or 0),
+r("UICorner",{
+CornerRadius=UDim.new(0,tonumber(z)or 0),
 }),
 }),
 })
 
-if typeof(x)=="Instance"then
-O.ImageLabel:Destroy()
-local P=x:Clone()
-P.Name="ImageLabel"
-if P:IsA"GuiObject"then
-P.Size=UDim2.fromScale(1,1)
-P.Position=UDim2.fromScale(0.5,0.5)
-P.AnchorPoint=Vector2.new(0.5,0.5)
+if typeof(v)=="Instance"then
+N.ImageLabel:Destroy()
+local O=v:Clone()
+O.Name="ImageLabel"
+if O:IsA"GuiObject"then
+O.Size=UDim2.fromScale(1,1)
+O.Position=UDim2.fromScale(0.5,0.5)
+O.AnchorPoint=Vector2.new(0.5,0.5)
 end
-P.Parent=O
-elseif M then
-O.ImageLabel:Destroy()
-local P=m.Image{
-Icon=x,
+O.Parent=N
+elseif L then
+N.ImageLabel:Destroy()
+local O=j.Image{
+Icon=v,
 Size=UDim2.fromScale(1,1),
 Colors={
-N or false,
+M or false,
 "Button",
 },
 }.IconFrame
-P.Parent=O
-elseif L then
-local P="WindUI/"..J.."/assets/."..C.."-"..z..".png"
-local Q,R=pcall(function()
+O.Parent=N
+elseif J then
+local O="WindUI/"..H.."/assets/."..B.."-"..x..".png"
+local P,Q=pcall(function()
 task.spawn(function()
-local Q=r.Request and r.Request{
-Url=x,
+local P=p.Request and p.Request{
+Url=v,
 Method="GET",
 }or nil
-local R=typeof(Q)=="table"and Q.Body or Q
+local Q=typeof(P)=="table"and P.Body or P
 
-if R and writefile then
-writefile(P,R)
+if Q and writefile then
+writefile(O,Q)
 end
 
-local S,T=pcall(getcustomasset,P)
-if S then
-O.ImageLabel.Image=T
-elseif not S then
-warn(string.format("[ WindUI.Creator ] Failed to load '%s': %s",P,tostring(T)))
+local R,S=pcall(getcustomasset,O)
+if R then
+N.ImageLabel.Image=S
+elseif not R then
+warn(string.format("[ WindUI.Creator ] Failed to load '%s': %s",O,tostring(S)))
 end
 end)
 end)
 
-if not Q then
-warn(string.format("[ WindUI.Creator ] URL image is unavailable: %s",tostring(R)))
-O.Visible=false
+if not P then
+warn(string.format("[ WindUI.Creator ] URL image is unavailable: %s",tostring(Q)))
+N.Visible=false
 end
-elseif x==nil or x==""then
-O.Visible=false
-elseif type(x)=="number"then
-O.ImageLabel.Image="rbxassetid://"..tostring(x)
-elseif type(x)=="string"then
-O.ImageLabel.Image=x
+elseif v==nil or v==""then
+N.Visible=false
+elseif type(v)=="number"then
+N.ImageLabel.Image="rbxassetid://"..tostring(v)
+elseif type(v)=="string"then
+N.ImageLabel.Image=v
 else
-warn(string.format("[ WindUI.Creator ] Unsupported image value: %s",typeof(x)))
-O.Visible=false
+warn(string.format("[ WindUI.Creator ] Unsupported image value: %s",typeof(v)))
+N.Visible=false
 end
 
-return O
+return N
 end
 
-function r.Color3ToHSB(x)
-local z,A,B=x.R,x.G,x.B
-local C=math.max(z,A,B)
-local F=math.min(z,A,B)
-local G=C-F
+function p.Color3ToHSB(v)
+local x,z,A=v.R,v.G,v.B
+local B=math.max(x,z,A)
+local C=math.min(x,z,A)
+local F=B-C
 
-local H=0
-if G~=0 then
-if C==z then
-H=(A-B)/G%6
-elseif C==A then
-H=(B-z)/G+2
+local G=0
+if F~=0 then
+if B==x then
+G=(z-A)/F%6
+elseif B==z then
+G=(A-x)/F+2
 else
-H=(z-A)/G+4
+G=(x-z)/F+4
 end
-H=H*60
+G=G*60
 else
-H=0
+G=0
 end
 
-local J=(C==0)and 0 or(G/C)
-local L=C
+local H=(B==0)and 0 or(F/B)
+local J=B
 
 return{
-h=math.floor(H+0.5),
-s=J,
-b=L,
+h=math.floor(G+0.5),
+s=H,
+b=J,
 }
 end
 
-function r.GetPerceivedBrightness(x)
-local z=x.R
-local A=x.G
-local B=x.B
-return 0.299*z+0.587*A+0.114*B
+function p.GetPerceivedBrightness(v)
+local x=v.R
+local z=v.G
+local A=v.B
+return 0.299*x+0.587*z+0.114*A
 end
 
-function r.GetTextColorForHSB(x,z)
-local A=r.Color3ToHSB(x)local
-B, C, F=A.h, A.s, A.b
-if r.GetPerceivedBrightness(x)>(z or 0.5)then
-return Color3.fromHSV(B/360,0,0.05)
+function p.GetTextColorForHSB(v,x)
+local z=p.Color3ToHSB(v)local
+A, B, C=z.h, z.s, z.b
+if p.GetPerceivedBrightness(v)>(x or 0.5)then
+return Color3.fromHSV(A/360,0,0.05)
 else
-return Color3.fromHSV(B/360,0,0.98)
+return Color3.fromHSV(A/360,0,0.98)
 end
 end
 
-function r.GetAverageColor(x)
-local z,A,B=0,0,0
-local C=x.Color.Keypoints
-for F,G in ipairs(C)do
+function p.GetAverageColor(v)
+local x,z,A=0,0,0
+local B=v.Color.Keypoints
+for C,F in ipairs(B)do
 
-z=z+G.Value.R
-A=A+G.Value.G
-B=B+G.Value.B
+x=x+F.Value.R
+z=z+F.Value.G
+A=A+F.Value.B
 end
-local F=#C
-return Color3.new(z/F,A/F,B/F)
+local C=#B
+return Color3.new(x/C,z/C,A/C)
 end
 
-function r.GenerateUniqueID(x)
+function p.GenerateUniqueID(v)
 return h:GenerateGUID(false)
 end
 
-function r.OnThemeChange(x,z)
-if typeof(z)~="function"then
+function p.OnThemeChange(v,x)
+if typeof(x)~="function"then
 return
 end
 
-local A=h:GenerateGUID(false)
-r.ThemeChangeCallbacks[A]=z
+local z=h:GenerateGUID(false)
+p.ThemeChangeCallbacks[z]=x
 
 return{
 Disconnect=function()
-r.ThemeChangeCallbacks[A]=nil
+p.ThemeChangeCallbacks[z]=nil
 end,
 }
 end
 
-function r.AddColor(x,z,A,B)
-B=math.clamp(B or 1,0,1)
-if typeof(A)=="string"then
-A=Color3.fromHex(A)
+function p.AddColor(v,x,z,A)
+A=math.clamp(A or 1,0,1)
+if typeof(z)=="string"then
+z=Color3.fromHex(z)
 end
 
-return function(C)
-local F
-if typeof(z)=="string"and string.sub(z,1,1)~="#"then
-F=r.GetThemeProperty(z,C)
-elseif typeof(z)=="string"then
-F=Color3.fromHex(z)
+return function(B)
+local C
+if typeof(x)=="string"and string.sub(x,1,1)~="#"then
+C=p.GetThemeProperty(x,B)
+elseif typeof(x)=="string"then
+C=Color3.fromHex(x)
 else
-F=z
+C=x
 end
 
-if not F or typeof(F)~="Color3"then
+if not C or typeof(C)~="Color3"then
 return nil
 end
 
 return Color3.new(
-math.clamp(F.R+A.R*B,0,1),
-math.clamp(F.G+A.G*B,0,1),
-math.clamp(F.B+A.B*B,0,1)
+math.clamp(C.R+z.R*A,0,1),
+math.clamp(C.G+z.G*A,0,1),
+math.clamp(C.B+z.B*A,0,1)
 )
 end
 end
 
-function r.GetElementPosition(x,z,A,B,C)
-C=if typeof(C)=="table"then C else{}
-if type(A)~="number"or A~=math.floor(A)then
-return"Squircle",r.DefaultCornerMap(),{Position="Single",Count=1}
+function p.GetElementPosition(v,x,z,A,B)
+B=if typeof(B)=="table"then B else{}
+if type(z)~="number"or z~=math.floor(z)then
+return"Squircle",p.DefaultCornerMap(),{Position="Single",Count=1}
 end
 
-local F=z and z[A]
-if F==nil then
-return"Squircle",r.DefaultCornerMap(),{Position="Single",Count=1}
+local C=x and x[z]
+if C==nil then
+return"Squircle",p.DefaultCornerMap(),{Position="Single",Count=1}
 end
 
-local G=if C.IncludeDefaultBreaks==false
+local F=if B.IncludeDefaultBreaks==false
 then{}
 else{
 Divider=true,
 Space=true,
 Section=true,
 }
-if typeof(C.BreakTypes)=="table"then
-for H,J in C.BreakTypes do
-if type(H)=="number"then
-G[tostring(J)]=true
+if typeof(B.BreakTypes)=="table"then
+for G,H in B.BreakTypes do
+if type(G)=="number"then
+F[tostring(H)]=true
 else
-G[tostring(H)]=J==true
+F[tostring(G)]=H==true
 end
 end
 end
 
-local function GetFrame(H)
-return H and(H.ElementFrame or(H.UIElements and H.UIElements.Main))
+local function GetFrame(G)
+return G and(G.ElementFrame or(G.UIElements and G.UIElements.Main))
 end
 
-local function IsHidden(H)
-if C.IgnoreHidden==false then
+local function IsHidden(G)
+if B.IgnoreHidden==false then
 return false
 end
-local J=GetFrame(H)
-return typeof(J)=="Instance"and J:IsA"GuiObject"and J.Visible==false
+local H=GetFrame(G)
+return typeof(H)=="Instance"and H:IsA"GuiObject"and H.Visible==false
 end
 
-local function IsDelimiter(H)
-return H==nil
-or H.CornerBreak==true
-or H.LinkCornerBreak==true
-or G[tostring(H.__type)]==true
+local function IsDelimiter(G)
+return G==nil
+or G.CornerBreak==true
+or G.LinkCornerBreak==true
+or F[tostring(G.__type)]==true
 end
 
-local function GetGroup(H)
-if typeof(C.GroupBy)=="function"then
-local J,L=pcall(C.GroupBy,H)
-if J then
-return L
+local function GetGroup(G)
+if typeof(B.GroupBy)=="function"then
+local H,J=pcall(B.GroupBy,G)
+if H then
+return J
 end
-elseif type(C.GroupBy)=="string"then
-return H[C.GroupBy]
-end
-
-return H.CornerGroup or H.LinkCornerGroup or H.LinkedCornerGroup
+elseif type(B.GroupBy)=="string"then
+return G[B.GroupBy]
 end
 
-if IsDelimiter(F)or IsHidden(F)then
-return"Squircle",r.DefaultCornerMap(),{Position="Single",Count=1}
+return G.CornerGroup or G.LinkCornerGroup or G.LinkedCornerGroup
 end
+
+if IsDelimiter(C)or IsHidden(C)then
+return"Squircle",p.DefaultCornerMap(),{Position="Single",Count=1}
+end
+
+local G={}
+for H,J in x or{}do
+if type(H)=="number"and J~=nil then
+table.insert(G,H)
+end
+end
+table.sort(G)
 
 local H={}
-for J,L in z or{}do
-if type(J)=="number"and L~=nil then
-table.insert(H,J)
-end
-end
-table.sort(H)
-
 local J={}
-local L={}
+local L
 local M
-local N
 
 local function Flush()
-if#L>0 then
-table.insert(J,L)
-L={}
+if#J>0 then
+table.insert(H,J)
+J={}
 end
+L=nil
 M=nil
-N=nil
 end
 
-for O,P in H do
-local Q=z[P]
-if IsHidden(Q)then
-if C.BridgeHidden~=true then
+for N,O in G do
+local P=x[O]
+if IsHidden(P)then
+if B.BridgeHidden~=true then
 Flush()
 else
-N=P
+M=O
 end
-elseif IsDelimiter(Q)then
+elseif IsDelimiter(P)then
 Flush()
 else
-local R=Q.CornerBreakBefore==true or Q.LinkCornerBreakBefore==true
-local S=N~=nil and P-N>1 and C.BridgeSparse~=true
-local T=M~=nil and GetGroup(M)~=GetGroup(Q)
-local U=M
-and(M.CornerBreakAfter==true or M.LinkCornerBreakAfter==true)
+local Q=P.CornerBreakBefore==true or P.LinkCornerBreakBefore==true
+local R=M~=nil and O-M>1 and B.BridgeSparse~=true
+local S=L~=nil and GetGroup(L)~=GetGroup(P)
+local T=L
+and(L.CornerBreakAfter==true or L.LinkCornerBreakAfter==true)
 
-if#L>0 and(R or S or T or U)then
+if#J>0 and(Q or R or S or T)then
 Flush()
 end
 
-table.insert(L,P)
-M=Q
-N=P
+table.insert(J,O)
+L=P
+M=O
 
-if Q.LinkCorners==false or Q.LinkCorner==false then
+if P.LinkCorners==false or P.LinkCorner==false then
 Flush()
 end
 end
 end
 Flush()
 
+local N
 local O
-local P
-for Q,R in J do
-for S,T in R do
-if T==A then
+for P,Q in H do
+for R,S in Q do
+if S==z then
+N=Q
 O=R
-P=S
 break
 end
 end
-if O then
+if N then
 break
 end
 end
 
-if not O or not P then
-return"Squircle",r.DefaultCornerMap(),{Position="Single",Count=1}
+if not N or not O then
+return"Squircle",p.DefaultCornerMap(),{Position="Single",Count=1}
 end
 
-local Q=#O
-local R=if C.Reverse==true then Q-P+1 else P
-local S=if C.InnerRadius~=nil
-then r.ToUDimRadius(C.InnerRadius,UDim.new(0,0))
+local P=#N
+local Q=if B.Reverse==true then P-O+1 else O
+local R=if B.InnerRadius~=nil
+then p.ToUDimRadius(B.InnerRadius,UDim.new(0,0))
 else false
-local T="Squircle"
-local U=r.DefaultCornerMap()
-local V="Single"
+local S="Squircle"
+local T=p.DefaultCornerMap()
+local U="Single"
 
-if Q>1 and R==1 then
-V="First"
-if B then
-T="Squircle-TL-BL"
-U.TopRight=S
-U.BottomRight=S
+if P>1 and Q==1 then
+U="First"
+if A then
+S="Squircle-TL-BL"
+T.TopRight=R
+T.BottomRight=R
 else
-T="Squircle-TL-TR"
-U.BottomLeft=S
-U.BottomRight=S
+S="Squircle-TL-TR"
+T.BottomLeft=R
+T.BottomRight=R
 end
-elseif Q>1 and R==Q then
-V="Last"
-if B then
-T="Squircle-TR-BR"
-U.TopLeft=S
-U.BottomLeft=S
+elseif P>1 and Q==P then
+U="Last"
+if A then
+S="Squircle-TR-BR"
+T.TopLeft=R
+T.BottomLeft=R
 else
-T="Squircle-BL-BR"
-U.TopLeft=S
-U.TopRight=S
+S="Squircle-BL-BR"
+T.TopLeft=R
+T.TopRight=R
 end
-elseif Q>1 then
-V="Middle"
-T="Square"
-if B then
-U.TopLeft=S
-U.TopRight=S
-U.BottomLeft=S
-U.BottomRight=S
+elseif P>1 then
+U="Middle"
+S="Square"
+if A then
+T.TopLeft=R
+T.TopRight=R
+T.BottomLeft=R
+T.BottomRight=R
 else
-U.TopLeft=S
-U.TopRight=S
-U.BottomLeft=S
-U.BottomRight=S
+T.TopLeft=R
+T.TopRight=R
+T.BottomLeft=R
+T.BottomRight=R
 end
 end
 
-local W={
-Position=V,
-Index=R,
-Count=Q,
-Horizontal=B==true,
-SourceIndex=A,
-Group=GetGroup(F),
+local V={
+Position=U,
+Index=Q,
+Count=P,
+Horizontal=A==true,
+SourceIndex=z,
+Group=GetGroup(C),
 }
 
-if typeof(C.Resolver)=="function"then
-local X,Y,_=pcall(C.Resolver,W,T,U,F)
-if X then
+if typeof(B.Resolver)=="function"then
+local W,X,Y=pcall(B.Resolver,V,S,T,C)
+if W then
+S=X or S
 T=Y or T
-U=_ or U
 end
 end
 
-return T,U,W
+return S,T,V
 end
 
-return r end function a.e()
+return p end function a.e()
 
 local b=game:GetService"TweenService"
 
@@ -2333,14 +2364,14 @@ return h.UserInputType==Enum.UserInputType.MouseButton1 or h.UserInputType==Enum
 end
 
 local function ApplyProperties(h,i)
-for l,m in next,i or{}do
-h[l]=m
+for j,m in next,i or{}do
+h[j]=m
 end
 end
 
 local function SplitReducedProperties(h)
 local i={}
-local l={}
+local j={}
 local m=false
 local p=false
 
@@ -2349,12 +2380,12 @@ if g[r]then
 i[r]=u
 m=true
 else
-l[r]=u
+j[r]=u
 p=true
 end
 end
 
-return m and i or nil,p and l or nil
+return m and i or nil,p and j or nil
 end
 
 function d.GetDuration(h)
@@ -2439,20 +2470,20 @@ if not h then
 return
 end
 
-local l=e[h]
-if not l then
+local j=e[h]
+if not j then
 return
 end
 
 i=i or"Default"
-local m=l[i]
+local m=j[i]
 if m then
 m:Cancel()
-l[i]=nil
+j[i]=nil
 end
 end
 
-function d.Tween(h,i,l,m,p,r)
+function d.Tween(h,i,j,m,p,r)
 if not h or typeof(h)~="Instance"then
 return f
 end
@@ -2461,9 +2492,9 @@ local u=d.GetDuration(i)
 r=r or"Default"
 
 local v
-local x=l
+local x=j
 if d.Reduced then
-v,x=SplitReducedProperties(l)
+v,x=SplitReducedProperties(j)
 u=math.min(u,d.Durations.Focus)
 end
 
@@ -2478,7 +2509,7 @@ ApplyProperties(h,v)
 end
 
 if not d:IsEnabled()or u<=0 or not x then
-ApplyProperties(h,x or l)
+ApplyProperties(h,x or j)
 return
 end
 
@@ -2516,8 +2547,8 @@ end
 return z
 end
 
-function d.Play(h,i,l,m,p,r)
-local u=d.Tween(h,i,l,m,p,r)
+function d.Play(h,i,j,m,p,r)
+local u=d.Tween(h,i,j,m,p,r)
 u:Play()
 return u
 end
@@ -2541,7 +2572,7 @@ end
 return i
 end
 
-function d.Press(h,i,l)
+function d.Press(h,i,j)
 local m=d.GetScale(h)
 if not m then
 return
@@ -2557,21 +2588,21 @@ end
 d.Play(
 m,
 "Press",
-{Scale=i and(l or d.PresetPressAmount[d.Preset]or 0.97)or 1},
+{Scale=i and(j or d.PresetPressAmount[d.Preset]or 0.97)or 1},
 Enum.EasingStyle.Quint,
 Enum.EasingDirection.Out,
 "Press"
 )
 end
 
-function d.AttachPress(h,i,l)
+function d.AttachPress(h,i,j)
 if not h or not i then
 return nil
 end
 
-l=l or{}
-local m=l.Amount or 0.97
-local p=l.Enabled
+j=j or{}
+local m=j.Amount or 0.97
+local p=j.Enabled
 
 local r=d.GetScale(h)
 
@@ -2638,7 +2669,7 @@ local f=b.Tween
 local g=16
 local h=56
 local i=100
-local l=404
+local j=404
 local m=220
 local p=22
 local r=12
@@ -2863,7 +2894,7 @@ ZIndex=100,
 },{
 e("UISizeConstraint",{
 MinSize=Vector2.new(m,0),
-MaxSize=Vector2.new(l,10000),
+MaxSize=Vector2.new(j,10000),
 }),
 e("UIListLayout",{
 HorizontalAlignment=Enum.HorizontalAlignment.Center,
@@ -3868,11 +3899,11 @@ local g,h="",0;
 
 
 local i="https://api.platoboost.app";
-local l=aS{
+local j=aS{
 Url=i.."/public/connectivity",
 Method="GET"
 };
-if l.StatusCode~=200 and l.StatusCode~=429 then
+if j.StatusCode~=200 and j.StatusCode~=429 then
 i="https://api.platoboost.net";
 end
 
@@ -16597,11 +16628,11 @@ aB,
 aa.AddSignal(aQ.Frame.Frame.TextBox.FocusLost,function(g)
 if g then
 local h=aQ.Frame.Frame.TextBox.Text:gsub("#","")
-local i,l=pcall(Color3.fromHex,h)
-if i and typeof(l)=="Color3"then
-aA.Hue,aA.Sat,aA.Vib=Color3.toHSV(l)
+local i,j=pcall(Color3.fromHex,h)
+if i and typeof(j)=="Color3"then
+aA.Hue,aA.Sat,aA.Vib=Color3.toHSV(j)
 aA:Update()
-aA.Default=l
+aA.Default=j
 end
 end
 end)
@@ -16610,10 +16641,10 @@ end)
 local function updateColorFromInput(g,h)
 aa.AddSignal(g.Frame.Frame.TextBox.FocusLost,function(i)
 if i then
-local l=g.Frame.Frame.TextBox
+local j=g.Frame.Frame.TextBox
 local m=GetRGB()
-local p=clamp(l.Text,0,255)
-l.Text=tostring(p)
+local p=clamp(j.Text,0,255)
+j.Text=tostring(p)
 
 m[h]=p
 local r=Color3.fromRGB(m.R,m.G,m.B)
@@ -16644,14 +16675,14 @@ end
 
 local function UpdateSatVib(g,h)
 local i=g.AbsolutePosition.X
-local l=i+g.AbsoluteSize.X
+local j=i+g.AbsoluteSize.X
 local m=g.AbsolutePosition.Y
 local p=m+g.AbsoluteSize.Y
 
-local r=math.clamp(aq.X,i,l)
+local r=math.clamp(aq.X,i,j)
 local u=math.clamp(aq.Y,m,p)
 
-h.Sat=(r-i)/(l-i)
+h.Sat=(r-i)/(j-i)
 h.Vib=1-((u-m)/(p-m))
 
 h:Update()
@@ -16659,22 +16690,22 @@ end
 
 local function UpdateHue(g,h)
 local i=g.AbsolutePosition.Y
-local l=i+g.AbsoluteSize.Y
+local j=i+g.AbsoluteSize.Y
 
-local m=math.clamp(aq.Y,i,l)
+local m=math.clamp(aq.Y,i,j)
 
-h.Hue=(m-i)/(l-i)
+h.Hue=(m-i)/(j-i)
 
 h:Update()
 end
 
 local function UpdateTransparency(g,h)
 local i=g.AbsolutePosition.Y
-local l=i+g.AbsoluteSize.Y
+local j=i+g.AbsoluteSize.Y
 
-local m=math.clamp(aq.Y,i,l)
+local m=math.clamp(aq.Y,i,j)
 
-h.Transparency=1-((m-i)/(l-i))
+h.Transparency=1-((m-i)/(j-i))
 
 h:Update()
 end
@@ -25820,7 +25851,7 @@ function az.CreateTopbarButton(aS,aT,aU,aV,b,d,e,f,g)
 local h=b or 999
 g=g or{}
 local i=g.ForceIcon==true
-local l=az.Topbar.ButtonsType=="Default"or i
+local j=az.Topbar.ButtonsType=="Default"or i
 local m=az.Topbar.ButtonsType~="Default"and not i
 local p=ao.Image(
 aU,
@@ -25828,18 +25859,18 @@ aU,
 0,
 az.Folder,
 "WindowTopbarIcon",
-l,
+j,
 d,
 "WindowTopbarButtonIcon"
 )
-p.Size=l
+p.Size=j
 and UDim2.new(0,f or az.TopBarButtonIconSize,0,f or az.TopBarButtonIconSize)
 or UDim2.new(0,0,0,0)
 p.AnchorPoint=Vector2.new(0.5,0.5)
 p.Position=UDim2.new(0.5,0,0.5,0)
 local r=GetImageTarget(p)
 if r then
-r.ImageTransparency=l and 0 or 1
+r.ImageTransparency=j and 0 or 1
 end
 
 if m and r then
@@ -25847,10 +25878,10 @@ r.ImageColor3=ao.GetTextColorForHSB(e or Color3.fromHex"#ff3030")
 end
 
 local u=ao.NewRoundFrame(
-l and az.UICorner-(az.UIPadding/2)or 999,
+j and az.UICorner-(az.UIPadding/2)or 999,
 "Squircle",
 {
-Size=l
+Size=j
 and UDim2.new(0,az.Topbar.Height-16,0,az.Topbar.Height-16)
 or UDim2.new(0,14,0,14),
 LayoutOrder=h,
@@ -25860,10 +25891,10 @@ ZIndex=9999,
 AnchorPoint=Vector2.new(0.5,0.5),
 Position=UDim2.new(0.5,0,0.5,0),
 ImageColor3=m and(e or Color3.fromHex"#ff3030")or nil,
-ThemeTag=l and{
+ThemeTag=j and{
 ImageColor3="Text",
 }or nil,
-ImageTransparency=l and 1 or 0,
+ImageTransparency=j and 1 or 0,
 },
 {
 
@@ -25909,7 +25940,7 @@ aV()
 end
 end)
 ao.AddSignal(u.MouseEnter,function()
-if l then
+if j then
 ap.Play(u,"Hover",{ImageTransparency=0.93},nil,nil,"Hover")
 
 
@@ -25939,7 +25970,7 @@ ap.Play(u.UIScale,"Press",{Scale=0.9},Enum.EasingStyle.Quint,Enum.EasingDirectio
 end)
 
 ao.AddSignal(u.MouseLeave,function()
-if l then
+if j then
 ap.Play(u,"Hover",{ImageTransparency=1},nil,nil,"Hover")
 
 
@@ -26908,12 +26939,12 @@ local g=d.Y-(b*2)
 local h=f/e.X
 local i=g/e.Y
 
-local l=math.min(h,i)
+local j=math.min(h,i)
 
 local m=0.3
 local p=1.0
 
-local r=math.clamp(l,m,p)
+local r=math.clamp(j,m,p)
 
 local u=az:GetUIScale()or 1
 local v=0.05
@@ -27066,20 +27097,20 @@ Buttons=h.Buttons or{},
 
 TextPadding=14,
 }
-local l=f.Create(false,"Dialog",az,ax.WindUI,az.UIElements.Main.Main)
+local j=f.Create(false,"Dialog",az,ax.WindUI,az.UIElements.Main.Main)
 
-l.UIElements.Main.Size=UDim2.new(0,i.Width,0,0)
+j.UIElements.Main.Size=UDim2.new(0,i.Width,0,0)
 
 local m=aq("Frame",{
 Size=UDim2.new(1,0,1,0),
 AutomaticSize="Y",
 BackgroundTransparency=1,
-Parent=l.UIElements.Main,
+Parent=j.UIElements.Main,
 },{
 aq("UIListLayout",{
 FillDirection="Vertical",
 
-Padding=UDim.new(0,l.UIPadding),
+Padding=UDim.new(0,j.UIPadding),
 }),
 })
 
@@ -27091,7 +27122,7 @@ Parent=m,
 },{
 aq("UIListLayout",{
 FillDirection="Horizontal",
-Padding=UDim.new(0,l.UIPadding),
+Padding=UDim.new(0,j.UIPadding),
 VerticalAlignment="Center",
 }),
 aq("UIPadding",{
@@ -27116,28 +27147,28 @@ r.Size=UDim2.new(0,22,0,22)
 r.Parent=p
 end
 
-l.UIElements.UIListLayout=aq("UIListLayout",{
+j.UIElements.UIListLayout=aq("UIListLayout",{
 Padding=UDim.new(0,12),
 FillDirection="Vertical",
 HorizontalAlignment="Left",
 VerticalFlex="SpaceBetween",
-Parent=l.UIElements.Main,
+Parent=j.UIElements.Main,
 })
 
 aq("UISizeConstraint",{
 MinSize=Vector2.new(180,20),
 MaxSize=Vector2.new(400,math.huge),
-Parent=l.UIElements.Main,
+Parent=j.UIElements.Main,
 })
 
-l.UIElements.Title=aq("TextLabel",{
+j.UIElements.Title=aq("TextLabel",{
 Text=i.Title,
 TextSize=20,
 FontFace=Font.new(ao.Font,Enum.FontWeight.SemiBold),
 TextXAlignment="Left",
 TextWrapped=true,
 RichText=true,
-Size=UDim2.new(1,r and-26-l.UIPadding or 0,0,0),
+Size=UDim2.new(1,r and-26-j.UIPadding or 0,0,0),
 AutomaticSize="Y",
 ThemeTag={
 TextColor3="Text",
@@ -27182,7 +27213,7 @@ local v=aq("Frame",{
 Size=UDim2.new(1,0,0,36),
 AutomaticSize="None",
 BackgroundTransparency=1,
-Parent=l.UIElements.Main,
+Parent=j.UIElements.Main,
 LayoutOrder=4,
 },{
 u,
@@ -27198,7 +27229,7 @@ local x={}
 
 for z,A in next,i.Buttons do
 local B=
-at(A.Title,A.Icon,A.Callback,A.Variant,v,l,true)
+at(A.Title,A.Icon,A.Callback,A.Variant,v,j,true)
 table.insert(x,B)
 B.Size=UDim2.new(1,0,1,0)
 end
@@ -27255,9 +27286,9 @@ end
 
 
 
-l:Open()
+j:Open()
 
-return l
+return j
 end
 
 local g=false
@@ -27357,8 +27388,8 @@ i.UserInputType==Enum.UserInputType.MouseMovement
 or i.UserInputType==Enum.UserInputType.Touch
 then
 if isResizing and az.CanResize then
-local l=i.Position-initialInputPosition
-local m=UDim2.new(0,initialSize.X.Offset+l.X*2,0,initialSize.Y.Offset+l.Y*2)
+local j=i.Position-initialInputPosition
+local m=UDim2.new(0,initialSize.X.Offset+j.X*2,0,initialSize.Y.Offset+j.Y*2)
 
 m=UDim2.new(
 m.X.Scale,
@@ -27396,7 +27427,7 @@ end)
 
 
 local i=0
-local l=0.4
+local j=0.4
 local m
 local p=0
 
@@ -27415,14 +27446,14 @@ i=r
 m=u
 
 task.spawn(function()
-task.wait(l)
+task.wait(j)
 if p==1 then
 p=0
 m=nil
 end
 end)
 elseif p==2 then
-if r-i<=l and u==m then
+if r-i<=j and u==m then
 onDoubleClick()
 end
 
@@ -27558,6 +27589,8 @@ CreateWindow=nil,
 
 CurrentInput=nil,
 }
+
+aa.IconAdapterVersion=aa.Creator.IconAdapterVersion
 
 local ag=(cloneref or clonereference or function(ag)
 return ag

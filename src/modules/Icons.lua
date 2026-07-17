@@ -3,8 +3,48 @@ local cloneref = (cloneref or clonereference or function(instance)
 end)
 
 local ReplicatedStorage = cloneref(game:GetService("ReplicatedStorage"))
-local RemoteIcons = ReplicatedStorage:WaitForChild("GetIcons", 99999):InvokeServer()
-local IconModule = if typeof(RemoteIcons) == "table" then RemoteIcons else {}
+local HttpService = cloneref(game:GetService("HttpService"))
+local RunService = cloneref(game:GetService("RunService"))
+
+local ICONS_URL = "https://article-hub-studio.github.io/WindUI-Skibidi/vendor/icons/Main-v2.lua"
+
+local function LoadBaseIcons()
+	local RemoteFunction = ReplicatedStorage:FindFirstChild("GetIcons")
+	if
+		RemoteFunction
+		and RemoteFunction:IsA("RemoteFunction")
+		and (RunService:IsStudio() or RemoteFunction:GetAttribute("WindUIIcons") == true)
+	then
+		local Success, Result = pcall(function()
+			return RemoteFunction:InvokeServer()
+		end)
+		if Success and typeof(Result) == "table" then
+			return Result
+		end
+	end
+
+	local Success, Source = pcall(function()
+		if game.HttpGet then
+			return game:HttpGet(ICONS_URL)
+		end
+		return HttpService:GetAsync(ICONS_URL)
+	end)
+	if Success and type(Source) == "string" and type(loadstring) == "function" then
+		local Chunk = loadstring(Source)
+		if Chunk then
+			local Ran, Result = pcall(Chunk)
+			if Ran and typeof(Result) == "table" then
+				return Result
+			end
+		end
+	end
+
+	warn("[ WindUI.Icons ] Unable to load the base icon catalog; custom sources remain available")
+	return {}
+end
+
+local IconModule = LoadBaseIcons()
+IconModule.AdapterVersion = 2
 
 local DEFAULT_SOURCE_ALIASES = {
 	lucidev = "lucide",

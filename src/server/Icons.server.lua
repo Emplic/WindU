@@ -28,6 +28,7 @@ end
 
 local RemoteFunction = Instance.new("RemoteFunction")
 RemoteFunction.Name = "GetIcons"
+RemoteFunction:SetAttribute("WindUIIcons", true)
 RemoteFunction.Parent = ReplicatedStorage
 
 RemoteFunction.OnServerInvoke = function(player, methodName, ...)

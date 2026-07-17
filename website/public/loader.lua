@@ -1,5 +1,5 @@
-local CACHE_KEY = "1.6.65-ui-runtime-2"
-local REQUIRED_API = { "RegisterIconPack", "GetIconSources", "ExpandOpenButton" }
+local CACHE_KEY = "1.6.65-ui-runtime-3"
+local REQUIRED_API = { "RegisterIconPack", "GetIconSources", "ExpandOpenButton", "AdapterVersion" }
 
 local MIRRORS = {
 	"https://raw.githubusercontent.com/article-hub-studio/WindUI-Skibidi/main/dist/main.lua?v=" .. CACHE_KEY,

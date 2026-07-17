@@ -27,6 +27,8 @@ local WindUI = {
 	CurrentInput = nil,
 }
 
+WindUI.IconAdapterVersion = WindUI.Creator.IconAdapterVersion
+
 local cloneref = (cloneref or clonereference or function(instance)
 	return instance
 end)

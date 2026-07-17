@@ -9,19 +9,9 @@ local LocalizationService = cloneref(game:GetService("LocalizationService"))
 local HttpService = cloneref(game:GetService("HttpService"))
 
 local DynamicShapeModule = require("./DynamicShape")
+local Icons = require("./Icons")
 
 local RenderStepped = RunService.Heartbeat
-
-local IconsURL = "https://article-hub-studio.github.io/WindUI-Skibidi/vendor/icons/Main-v2.lua"
-
-local Icons
-if RunService:IsStudio() or not writefile then
-	Icons = require("./Icons")
-else
-	Icons = loadstring(
-		game.HttpGet and game:HttpGet(IconsURL) or HttpService:GetAsync(IconsURL) --studio
-	)()
-end
 
 Icons.SetIconsType("lucide")
 
@@ -35,6 +25,7 @@ Creator = {
 	Theme = nil,
 	Themes = nil,
 	Icons = Icons,
+	IconAdapterVersion = Icons.AdapterVersion or 1,
 	Signals = {},
 	Objects = {},
 	LocalizationObjects = {},
