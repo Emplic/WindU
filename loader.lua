@@ -1,6 +1,6 @@
 local CACHE_KEY = "1.6.65-ui-runtime-5"
 local REQUIRED_API = { "RegisterIconPack", "GetIconSources", "ExpandOpenButton", "AdapterVersion=3", "CreateUIShadow" }
-local SOURCE_URL = "https://raw.githubusercontent.com/Emplic/WindU/dist/main.lua?v=" .. CACHE_KEY
+local SOURCE_URL = "https://raw.githubusercontent.com/Emplic/WindU/refs/heads/main/dist/main.lua?v=" .. CACHE_KEY
 
 local Success, Source = pcall(function()
 	return game:HttpGet(SOURCE_URL)
