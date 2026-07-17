@@ -244,55 +244,55 @@ return function(WindUI, Creator)
 		Midnight = {
 			Name = "Midnight",
 
-			-- Deep navy surfaces with a cool moonlit blue accent.
+			-- Matte-black foundation with restrained platinum highlights.
 			Accent = WindUI:Gradient({
-				["0"] = { Color = Color3.fromHex("#6D8CFF"), Transparency = 0 },
-				["100"] = { Color = Color3.fromHex("#9B7BFF"), Transparency = 0 },
+				["0"] = { Color = Color3.fromHex("#D7DAE2"), Transparency = 0 },
+				["100"] = { Color = Color3.fromHex("#9299A8"), Transparency = 0 },
 			}, { Rotation = 35 }),
 
 			Dialog = WindUI:Gradient({
-				["0"] = { Color = Color3.fromHex("#111A33"), Transparency = 0 },
-				["100"] = { Color = Color3.fromHex("#17152D"), Transparency = 0 },
-			}, { Rotation = 120 }),
+				["0"] = { Color = Color3.fromHex("#111214"), Transparency = 0 },
+				["100"] = { Color = Color3.fromHex("#0B0C0E"), Transparency = 0 },
+			}, { Rotation = 125 }),
 
-			Outline = Color3.fromHex("#33446F"),
-			Text = Color3.fromHex("#F4F7FF"),
-			Placeholder = Color3.fromHex("#8997B8"),
+			Outline = Color3.fromHex("#303238"),
+			Text = Color3.fromHex("#F5F5F6"),
+			Placeholder = Color3.fromHex("#85878D"),
 
 			Background = WindUI:Gradient({
-				["0"] = { Color = Color3.fromHex("#070B17"), Transparency = 0 },
-				["55"] = { Color = Color3.fromHex("#0B1124"), Transparency = 0 },
-				["100"] = { Color = Color3.fromHex("#120E24"), Transparency = 0 },
+				["0"] = { Color = Color3.fromHex("#050506"), Transparency = 0 },
+				["58"] = { Color = Color3.fromHex("#090A0C"), Transparency = 0 },
+				["100"] = { Color = Color3.fromHex("#0D0E11"), Transparency = 0 },
 			}, { Rotation = 145 }),
 
 			Button = WindUI:Gradient({
-				["0"] = { Color = Color3.fromHex("#4F73E8"), Transparency = 0 },
-				["100"] = { Color = Color3.fromHex("#7656D9"), Transparency = 0 },
-			}, { Rotation = 35 }),
+				["0"] = { Color = Color3.fromHex("#2B2D32"), Transparency = 0 },
+				["100"] = { Color = Color3.fromHex("#1C1D21"), Transparency = 0 },
+			}, { Rotation = 90 }),
 
-			Primary = Color3.fromHex("#6D8CFF"),
-			Icon = Color3.fromHex("#A9B9FF"),
-			Toggle = Color3.fromHex("#6D8CFF"),
-			Slider = Color3.fromHex("#8A7CFF"),
-			SliderIcon = Color3.fromHex("#D7DEFF"),
-			Checkbox = Color3.fromHex("#7A8FFF"),
+			Primary = Color3.fromHex("#B9C2D6"),
+			Icon = Color3.fromHex("#C4C7CE"),
+			Toggle = Color3.fromHex("#AEB8CF"),
+			Slider = Color3.fromHex("#AEB8CF"),
+			SliderIcon = Color3.fromHex("#F1F2F4"),
+			Checkbox = Color3.fromHex("#B9C2D6"),
 
-			DropdownTabBackground = Color3.fromHex("#171F38"),
-			DropdownBackground = Color3.fromHex("#0F162A"),
+			DropdownTabBackground = Color3.fromHex("#17181B"),
+			DropdownBackground = Color3.fromHex("#0D0E10"),
 
-			TabBackground = Color3.fromHex("#0D1427"),
-			TabBackgroundHover = Color3.fromHex("#182342"),
+			TabBackground = Color3.fromHex("#0B0C0E"),
+			TabBackgroundHover = Color3.fromHex("#17181C"),
 			TabBackgroundHoverTransparency = 0,
-			TabBackgroundActive = Color3.fromHex("#202D52"),
+			TabBackgroundActive = Color3.fromHex("#22242A"),
 			TabBackgroundActiveTransparency = 0,
 
-			PanelBackground = Color3.fromHex("#17213B"),
-			PanelBackgroundTransparency = 0.18,
+			PanelBackground = Color3.fromHex("#141518"),
+			PanelBackgroundTransparency = 0.08,
 
-			LabelBackground = Color3.fromHex("#111A30"),
-			LabelBackgroundTransparency = 0.12,
+			LabelBackground = Color3.fromHex("#101113"),
+			LabelBackgroundTransparency = 0.08,
 
-			ElementBackground = Color3.fromHex("#151E35"),
+			ElementBackground = Color3.fromHex("#151619"),
 			ElementBackgroundTransparency = 0,
 		},
 
