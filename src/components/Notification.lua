@@ -4,27 +4,31 @@ local Motion = require("../modules/Motion")
 local New = Creator.New
 local Tween = Creator.Tween
 
-local HOLDER_SIDE_MARGIN = 12
+local HOLDER_SIDE_MARGIN = 16
 local HOLDER_TOP = 56
 local HOLDER_BOTTOM = 100
-local HOLDER_MAX_WIDTH = 360
-local HOLDER_MIN_WIDTH = 200
-local CARD_RADIUS = 14
+local HOLDER_MAX_WIDTH = 384
+local HOLDER_MIN_WIDTH = 220
+local CARD_RADIUS = 16
 local CARD_PADDING = 14
-local CARD_GAP = 8
-local ICON_SIZE = 38
+local CARD_GAP = 10
+local ICON_SIZE = 36
 local CLOSE_SIZE = 44
+local CLOSE_SURFACE_SIZE = 30
 local ACTION_HEIGHT = 44
 local MAX_ACTIONS = 2
-local MAX_TITLE_HEIGHT = 38
-local MAX_CONTENT_HEIGHT = 62
+local MAX_TITLE_HEIGHT = 42
+local MAX_CONTENT_HEIGHT = 72
 local PROGRESS_HEIGHT = 3
 local MAX_VISIBLE = 5
+local ENTER_OFFSET = 24
+local EXIT_OFFSET = 18
+local SHADOW_OFFSET = 3
 
 local NOTIFICATION_STYLES = {
 	Info = {
 		Icon = "info",
-		Color = Color3.fromHex("#2F80ED"),
+		Color = Color3.fromHex("#60A5FA"),
 	},
 	Notice = {
 		Icon = "bell",
@@ -32,19 +36,19 @@ local NOTIFICATION_STYLES = {
 	},
 	Success = {
 		Icon = "circle-check",
-		Color = Color3.fromHex("#22C55E"),
+		Color = Color3.fromHex("#34D399"),
 	},
 	Warning = {
 		Icon = "triangle-alert",
-		Color = Color3.fromHex("#F59E0B"),
+		Color = Color3.fromHex("#FBBF24"),
 	},
 	Error = {
 		Icon = "circle-x",
-		Color = Color3.fromHex("#EF4444"),
+		Color = Color3.fromHex("#FB7185"),
 	},
 	Neutral = {
 		Icon = "message-circle",
-		Color = Color3.fromHex("#71717A"),
+		Color = Color3.fromHex("#A1A1AA"),
 	},
 }
 
@@ -182,7 +186,7 @@ local function TrimNotifications(MaxVisible, AvailableHeight)
 	while #Active > 1 and (#Active > MaxVisible or TotalHeight > AvailableHeight) do
 		local Oldest = table.remove(Active, 1)
 		TotalHeight = TotalHeight - (Oldest.LayoutHeight or 64) - CARD_GAP
-		Oldest:Close()
+		Oldest:Close("Overflow")
 	end
 end
 
@@ -251,8 +255,12 @@ function NotificationModule.New(Config)
 		Duration = ResolveDuration(Config.Duration),
 		Buttons = GetActions(Config.Buttons),
 		CanClose = Config.CanClose ~= false,
+		PauseOnHover = Config.PauseOnHover ~= false,
+		OnOpen = Config.OnOpen,
+		OnClose = Config.OnClose,
 		UIElements = {},
 		Closed = false,
+		Paused = false,
 	}
 
 	NotificationModule.NotificationIndex = NotificationModule.NotificationIndex + 1
@@ -267,6 +275,8 @@ function NotificationModule.New(Config)
 	local RightSpace = Notification.CanClose and (CLOSE_SIZE + 6) or 0
 	local ProgressTween
 	local TimerToken = 0
+	local TimerRemaining = if HasTimer then Notification.Duration else 0
+	local TimerStartedAt
 	local Opened = false
 	local CanTrim = false
 	local TargetHeight = 64
@@ -280,17 +290,46 @@ function NotificationModule.New(Config)
 
 	local function AttachPress(Button, Amount)
 		Connect(Button.InputBegan, function(Input)
-			if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+			if
+				Input.UserInputType == Enum.UserInputType.MouseButton1
+				or Input.UserInputType == Enum.UserInputType.Touch
+			then
 				Motion.Press(Button, true, Amount)
 			end
 		end)
 		Connect(Button.InputEnded, function(Input)
-			if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
+			if
+				Input.UserInputType == Enum.UserInputType.MouseButton1
+				or Input.UserInputType == Enum.UserInputType.Touch
+			then
 				Motion.Press(Button, false, Amount)
 			end
 		end)
 		Connect(Button.MouseLeave, function()
 			Motion.Press(Button, false, Amount)
+		end)
+	end
+
+	local function AttachHover(Button, Target, HoverTransparency, RestTransparency)
+		Connect(Button.MouseEnter, function()
+			Motion.Play(
+				Target,
+				"Hover",
+				{ BackgroundTransparency = HoverTransparency },
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.Out,
+				"Hover"
+			)
+		end)
+		Connect(Button.MouseLeave, function()
+			Motion.Play(
+				Target,
+				"Hover",
+				{ BackgroundTransparency = RestTransparency },
+				Enum.EasingStyle.Quint,
+				Enum.EasingDirection.Out,
+				"Hover"
+			)
 		end)
 	end
 
@@ -311,26 +350,64 @@ function NotificationModule.New(Config)
 		Parent = Holder,
 	})
 
-	local Main = New("Frame", {
-		Name = "Notification",
-		BackgroundColor3 = Color3.fromRGB(16, 18, 24),
-		BackgroundTransparency = 0.03,
+	local MainScale = New("UIScale", {
+		Name = "TransitionScale",
+		Scale = 0.965,
+	})
+
+	local Main = New("CanvasGroup", {
+		Name = "NotificationTransition",
+		Active = true,
+		BackgroundTransparency = 1,
+		GroupTransparency = 1,
 		BorderSizePixel = 0,
 		Size = UDim2.new(1, 0, 0, TargetHeight),
-		Position = UDim2.new(0, 28, 0, 0),
-		ClipsDescendants = true,
+		Position = UDim2.new(0, ENTER_OFFSET, 0, 0),
+		ClipsDescendants = false,
 		ZIndex = 101,
+		Parent = MainContainer,
+	}, {
+		MainScale,
+	})
+
+	local Shadow = New("Frame", {
+		Name = "Shadow",
+		BackgroundColor3 = Color3.new(0, 0, 0),
+		BackgroundTransparency = 0.74,
+		BorderSizePixel = 0,
+		Size = UDim2.new(1, -2, 1, -SHADOW_OFFSET),
+		Position = UDim2.new(0, 1, 0, SHADOW_OFFSET),
+		ZIndex = 101,
+		Parent = Main,
+	}, {
+		CreateCorner(CARD_RADIUS),
+	})
+
+	local CardStroke = New("UIStroke", {
+		Color = Color3.new(1, 1, 1),
+		Transparency = 0.75,
+		Thickness = 1,
+		ThemeTag = {
+			Color = "NotificationBorder",
+			Transparency = "NotificationBorderTransparency",
+		},
+	})
+
+	local Card = New("Frame", {
+		Name = "Notification",
+		BackgroundColor3 = Color3.fromRGB(16, 18, 24),
+		BackgroundTransparency = 0.05,
+		BorderSizePixel = 0,
+		Size = UDim2.new(1, 0, 1, -SHADOW_OFFSET),
+		ClipsDescendants = true,
+		ZIndex = 102,
 		ThemeTag = {
 			BackgroundColor3 = "Notification",
 		},
-		Parent = MainContainer,
+		Parent = Main,
 	}, {
 		CreateCorner(CARD_RADIUS),
-		New("UIStroke", {
-			Color = Notification.AccentColor,
-			Transparency = 0.72,
-			Thickness = 1,
-		}),
+		CardStroke,
 	})
 
 	New("Frame", {
@@ -339,12 +416,12 @@ function NotificationModule.New(Config)
 		BorderSizePixel = 0,
 		BackgroundTransparency = 0.94,
 		Size = UDim2.fromScale(1, 1),
-		ZIndex = 102,
+		ZIndex = 103,
 		ThemeTag = {
 			BackgroundColor3 = "Notification2",
 			BackgroundTransparency = "Notification2Transparency",
 		},
-		Parent = Main,
+		Parent = Card,
 	}, {
 		CreateCorner(CARD_RADIUS),
 	})
@@ -357,44 +434,69 @@ function NotificationModule.New(Config)
 			Size = UDim2.fromScale(1, 1),
 			ScaleType = Enum.ScaleType.Crop,
 			ImageTransparency = Notification.BackgroundImageTransparency,
-			ZIndex = 103,
-			Parent = Main,
+			ZIndex = 104,
+			Parent = Card,
 		}, {
 			CreateCorner(CARD_RADIUS),
 		})
 	end
 
 	New("Frame", {
-		Name = "StyleWash",
+		Name = "ToneWash",
 		BackgroundColor3 = Notification.AccentColor,
-		BackgroundTransparency = 0.9,
+		BackgroundTransparency = 0.82,
 		BorderSizePixel = 0,
 		Size = UDim2.fromScale(1, 1),
-		ZIndex = 104,
-		Parent = Main,
+		ZIndex = 105,
+		Parent = Card,
 	}, {
 		CreateCorner(CARD_RADIUS),
 		New("UIGradient", {
-			Rotation = 0,
+			Rotation = 18,
 			Transparency = NumberSequence.new({
-				NumberSequenceKeypoint.new(0, 0.12),
-				NumberSequenceKeypoint.new(0.42, 0.78),
+				NumberSequenceKeypoint.new(0, 0.42),
+				NumberSequenceKeypoint.new(0.38, 0.86),
 				NumberSequenceKeypoint.new(1, 1),
 			}),
 		}),
 	})
 
 	New("Frame", {
-		Name = "Accent",
+		Name = "AccentLine",
 		BackgroundColor3 = Notification.AccentColor,
-		BackgroundTransparency = 0.08,
+		BackgroundTransparency = 0.04,
 		BorderSizePixel = 0,
-		Size = UDim2.new(0, 3, 1, -20),
-		Position = UDim2.new(0, 0, 0, 10),
-		ZIndex = 105,
-		Parent = Main,
+		Size = UDim2.new(0.55, 0, 0, 2),
+		Position = UDim2.fromOffset(0, 0),
+		ZIndex = 106,
+		Parent = Card,
 	}, {
-		CreateCorner(2),
+		New("UIGradient", {
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.08),
+				NumberSequenceKeypoint.new(0.55, 0.5),
+				NumberSequenceKeypoint.new(1, 1),
+			}),
+		}),
+	})
+
+	New("Frame", {
+		Name = "TopHighlight",
+		BackgroundColor3 = Color3.new(1, 1, 1),
+		BackgroundTransparency = 0.86,
+		BorderSizePixel = 0,
+		Size = UDim2.new(0.72, 0, 0, 1),
+		Position = UDim2.new(0.14, 0, 0, 0),
+		ZIndex = 106,
+		Parent = Card,
+	}, {
+		New("UIGradient", {
+			Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1),
+				NumberSequenceKeypoint.new(0.5, 0.15),
+				NumberSequenceKeypoint.new(1, 1),
+			}),
+		}),
 	})
 
 	local Body = New("Frame", {
@@ -402,8 +504,8 @@ function NotificationModule.New(Config)
 		BackgroundTransparency = 1,
 		Size = UDim2.new(1, -(CARD_PADDING * 2), 0, 0),
 		Position = UDim2.fromOffset(CARD_PADDING, CARD_PADDING),
-		ZIndex = 106,
-		Parent = Main,
+		ZIndex = 107,
+		Parent = Card,
 	})
 
 	local BodyLayout = New("UIListLayout", {
@@ -415,7 +517,12 @@ function NotificationModule.New(Config)
 	local HeaderRow = New("Frame", {
 		Name = "Header",
 		BackgroundTransparency = 1,
-		Size = UDim2.new(1, 0, 0, math.max(Notification.Icon and ICON_SIZE or 0, Notification.CanClose and CLOSE_SIZE or 0, 20)),
+		Size = UDim2.new(
+			1,
+			0,
+			0,
+			math.max(Notification.Icon and ICON_SIZE or 0, Notification.CanClose and CLOSE_SIZE or 0, 20)
+		),
 		LayoutOrder = 1,
 		ZIndex = 107,
 		Parent = Body,
@@ -464,36 +571,34 @@ function NotificationModule.New(Config)
 		}),
 	})
 
-	local Content
-	if Notification.Content then
-		Content = New("TextLabel", {
-			Name = "Content",
-			AutomaticSize = Enum.AutomaticSize.Y,
-			Size = UDim2.new(1, 0, 0, 0),
-			BackgroundTransparency = 1,
-			Text = Notification.Content,
-			TextWrapped = true,
-			TextTruncate = Enum.TextTruncate.AtEnd,
-			RichText = true,
-			TextXAlignment = Enum.TextXAlignment.Left,
-			TextYAlignment = Enum.TextYAlignment.Top,
-			TextSize = 13,
-			LineHeight = 1.08,
-			FontFace = Font.new(Creator.Font, Enum.FontWeight.Medium),
-			LayoutOrder = 2,
-			ZIndex = 108,
-			ThemeTag = {
-				TextColor3 = "NotificationContent",
-				TextTransparency = "NotificationContentTransparency",
-			},
-			Parent = TextContainer,
-		}, {
-			New("UISizeConstraint", {
-				MinSize = Vector2.new(0, 16),
-				MaxSize = Vector2.new(10000, MAX_CONTENT_HEIGHT),
-			}),
-		})
-	end
+	local Content = New("TextLabel", {
+		Name = "Content",
+		AutomaticSize = Enum.AutomaticSize.Y,
+		Size = UDim2.new(1, 0, 0, 0),
+		BackgroundTransparency = 1,
+		Text = Notification.Content or "",
+		TextWrapped = true,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		RichText = true,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextSize = 13,
+		LineHeight = 1.1,
+		FontFace = Font.new(Creator.Font, Enum.FontWeight.Regular),
+		LayoutOrder = 2,
+		Visible = Notification.Content ~= nil,
+		ZIndex = 108,
+		ThemeTag = {
+			TextColor3 = "NotificationContent",
+			TextTransparency = "NotificationContentTransparency",
+		},
+		Parent = TextContainer,
+	}, {
+		New("UISizeConstraint", {
+			MinSize = Vector2.new(0, 16),
+			MaxSize = Vector2.new(10000, MAX_CONTENT_HEIGHT),
+		}),
+	})
 
 	local IconBubble
 	if Notification.Icon then
@@ -511,13 +616,13 @@ function NotificationModule.New(Config)
 		Icon.AnchorPoint = Vector2.new(0.5, 0.5)
 		Icon.ZIndex = 110
 		if Creator.Icon(Notification.Icon) and Notification.IconThemed ~= true then
-			PaintIcon(Icon, Color3.new(1, 1, 1), 0)
+			PaintIcon(Icon, Notification.AccentColor, 0)
 		end
 
 		IconBubble = New("Frame", {
 			Name = "IconBubble",
 			BackgroundColor3 = Notification.AccentColor,
-			BackgroundTransparency = 0.16,
+			BackgroundTransparency = 0.84,
 			BorderSizePixel = 0,
 			Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE),
 			ZIndex = 109,
@@ -526,50 +631,72 @@ function NotificationModule.New(Config)
 			CreateCorner(12),
 			New("UIStroke", {
 				Color = Notification.AccentColor,
-				Transparency = 0.58,
+				Transparency = 0.62,
 				Thickness = 1,
+			}),
+			New("UIGradient", {
+				Rotation = 35,
+				Color = ColorSequence.new({
+					ColorSequenceKeypoint.new(0, Notification.AccentColor:Lerp(Color3.new(1, 1, 1), 0.16)),
+					ColorSequenceKeypoint.new(1, Notification.AccentColor),
+				}),
 			}),
 			Icon,
 		})
 	end
 
 	local CloseButton
+	local CloseSurface
 	if Notification.CanClose then
 		local CloseIconData = Creator.Icon("x")
-		CloseButton = New("TextButton", {
-			Name = "CloseButton",
-			Text = "",
-			AutoButtonColor = false,
+		CloseSurface = New("Frame", {
+			Name = "Surface",
 			BackgroundColor3 = Color3.new(1, 1, 1),
-			BackgroundTransparency = 0.94,
+			BackgroundTransparency = 0.92,
 			BorderSizePixel = 0,
-			Size = UDim2.fromOffset(CLOSE_SIZE, CLOSE_SIZE),
-			Position = UDim2.new(1, 0, 0, 0),
-			AnchorPoint = Vector2.new(1, 0),
+			Size = UDim2.fromOffset(CLOSE_SURFACE_SIZE, CLOSE_SURFACE_SIZE),
+			Position = UDim2.fromScale(0.5, 0.5),
+			AnchorPoint = Vector2.new(0.5, 0.5),
 			ZIndex = 109,
 			ThemeTag = {
 				BackgroundColor3 = "Notification2",
 			},
-			Parent = HeaderRow,
 		}, {
 			CreateCorner(10),
 			New("ImageLabel", {
 				Name = "Icon",
 				Image = CloseIconData and CloseIconData[1] or "",
 				ImageRectSize = CloseIconData and CloseIconData[2] and CloseIconData[2].ImageRectSize or Vector2.zero,
-				ImageRectOffset = CloseIconData and CloseIconData[2] and CloseIconData[2].ImageRectPosition or Vector2.zero,
+				ImageRectOffset = CloseIconData and CloseIconData[2] and CloseIconData[2].ImageRectPosition
+					or Vector2.zero,
 				BackgroundTransparency = 1,
-				Size = UDim2.fromOffset(16, 16),
+				Size = UDim2.fromOffset(14, 14),
 				Position = UDim2.fromScale(0.5, 0.5),
 				AnchorPoint = Vector2.new(0.5, 0.5),
-				ImageTransparency = 0.34,
+				ImageTransparency = 0.28,
 				ZIndex = 110,
 				ThemeTag = {
 					ImageColor3 = "NotificationTitle",
 				},
 			}),
 		})
+
+		CloseButton = New("TextButton", {
+			Name = "CloseButton",
+			Text = "",
+			AutoButtonColor = false,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			Size = UDim2.fromOffset(CLOSE_SIZE, CLOSE_SIZE),
+			Position = UDim2.new(1, 0, 0, 0),
+			AnchorPoint = Vector2.new(1, 0),
+			ZIndex = 109,
+			Parent = HeaderRow,
+		}, {
+			CloseSurface,
+		})
 		AttachPress(CloseButton, 0.96)
+		AttachHover(CloseButton, CloseSurface, 0.84, 0.92)
 	end
 
 	local ActionRow
@@ -593,6 +720,7 @@ function NotificationModule.New(Config)
 		})
 
 		for Index, Action in Notification.Buttons do
+			local IsPrimary = Index == 1
 			local ButtonSize
 			if #Notification.Buttons == 2 then
 				ButtonSize = UDim2.new(0.5, -3, 0, ACTION_HEIGHT)
@@ -600,19 +728,32 @@ function NotificationModule.New(Config)
 				ButtonSize = UDim2.new(1, 0, 0, ACTION_HEIGHT)
 			end
 
+			local RestTransparency = if IsPrimary then 0.16 else 0.93
+			local ActionStroke = New("UIStroke", {
+				Color = if IsPrimary then Notification.AccentColor else Color3.new(1, 1, 1),
+				Transparency = if IsPrimary then 0.55 else 0.78,
+				Thickness = 1,
+				ThemeTag = if IsPrimary
+					then nil
+					else {
+						Color = "NotificationBorder",
+						Transparency = "NotificationBorderTransparency",
+					},
+			})
+
 			local ActionButton = New("TextButton", {
 				Name = "Action" .. Index,
 				Text = tostring(Action.Title or Action.Text or "Action"),
 				TextSize = 13,
 				FontFace = Font.new(Creator.Font, Enum.FontWeight.SemiBold),
 				AutoButtonColor = false,
-				BackgroundColor3 = if Index == 1 then Notification.AccentColor else Color3.new(1, 1, 1),
-				BackgroundTransparency = if Index == 1 then 0.08 else 0.93,
+				BackgroundColor3 = if IsPrimary then Notification.AccentColor else Color3.new(1, 1, 1),
+				BackgroundTransparency = RestTransparency,
 				BorderSizePixel = 0,
 				Size = ButtonSize,
 				LayoutOrder = Index,
 				ZIndex = 108,
-				ThemeTag = if Index == 1
+				ThemeTag = if IsPrimary
 					then {
 						TextColor3 = "White",
 					}
@@ -623,13 +764,15 @@ function NotificationModule.New(Config)
 				Parent = ActionRow,
 			}, {
 				CreateCorner(10),
+				ActionStroke,
 			})
 			AttachPress(ActionButton, 0.97)
+			AttachHover(ActionButton, ActionButton, if IsPrimary then 0.06 else 0.87, RestTransparency)
 
 			Connect(ActionButton.MouseButton1Click, function()
 				Creator.SafeCallback(Action.Callback, Notification, Action)
 				if Action.Close ~= false and Action.CloseOnClick ~= false then
-					Notification:Close()
+					Notification:Close("Action")
 				end
 			end)
 		end
@@ -641,16 +784,16 @@ function NotificationModule.New(Config)
 		BackgroundColor3 = Color3.new(1, 1, 1),
 		BackgroundTransparency = 0.9,
 		BorderSizePixel = 0,
-		Size = UDim2.new(1, -(CARD_PADDING * 2), 0, PROGRESS_HEIGHT),
-		Position = UDim2.new(0, CARD_PADDING, 1, -7),
+		Size = UDim2.new(1, 0, 0, PROGRESS_HEIGHT),
+		Position = UDim2.new(0, 0, 1, 0),
 		AnchorPoint = Vector2.new(0, 1),
-		Visible = AnimateProgress,
+		Visible = HasTimer,
 		ZIndex = 111,
 		ThemeTag = {
 			BackgroundColor3 = "NotificationDuration",
 			BackgroundTransparency = "NotificationDurationTransparency",
 		},
-		Parent = Main,
+		Parent = Card,
 	}, {
 		CreateCorner(PROGRESS_HEIGHT),
 	})
@@ -658,7 +801,7 @@ function NotificationModule.New(Config)
 	local ProgressFill = New("Frame", {
 		Name = "ProgressFill",
 		BackgroundColor3 = Notification.ProgressColor,
-		BackgroundTransparency = Creator.ClampTransparency(Config.ProgressTransparency, 0.08),
+		BackgroundTransparency = Creator.ClampTransparency(Config.ProgressTransparency, 0.02),
 		BorderSizePixel = 0,
 		Size = UDim2.fromScale(1, 1),
 		ZIndex = 112,
@@ -668,14 +811,14 @@ function NotificationModule.New(Config)
 		New("UIGradient", {
 			Color = ColorSequence.new({
 				ColorSequenceKeypoint.new(0, Notification.ProgressColor),
-				ColorSequenceKeypoint.new(1, Notification.ProgressColor:Lerp(Color3.new(1, 1, 1), 0.3)),
+				ColorSequenceKeypoint.new(1, Notification.ProgressColor:Lerp(Color3.new(1, 1, 1), 0.22)),
 			}),
 		}),
 	})
 
 	local function UpdateContainerHeight(Animate)
 		local BodyHeight = math.max(math.ceil(BodyLayout.AbsoluteContentSize.Y), HeaderRow.Size.Y.Offset)
-		TargetHeight = CARD_PADDING + BodyHeight + CARD_PADDING
+		TargetHeight = CARD_PADDING + BodyHeight + CARD_PADDING + SHADOW_OFFSET
 		Notification.LayoutHeight = TargetHeight
 		Main.Size = UDim2.new(1, 0, 0, TargetHeight)
 
@@ -719,21 +862,150 @@ function NotificationModule.New(Config)
 		UpdateContainerHeight(Opened)
 	end)
 
-	function Notification:Close()
-		if Notification.Closed then
+	local function StopProgressTween()
+		if ProgressTween then
+			ProgressTween:Cancel()
+			ProgressTween = nil
+		end
+	end
+
+	local function CaptureRemainingTime()
+		if TimerStartedAt then
+			TimerRemaining = math.max(TimerRemaining - (os.clock() - TimerStartedAt), 0)
+			TimerStartedAt = nil
+		end
+		Notification.Remaining = TimerRemaining
+	end
+
+	local function SetProgressRatio(Ratio)
+		ProgressFill.Size = UDim2.new(math.clamp(Ratio, 0, 1), 0, 1, 0)
+	end
+
+	local function StartTimer()
+		if not HasTimer or not Opened or Notification.Closed or Notification.Paused then
 			return
 		end
 
-		Notification.Closed = true
-		TimerToken = TimerToken + 1
-		DisconnectSignals()
-		if ProgressTween then
-			ProgressTween:Cancel()
+		if TimerRemaining <= 0 then
+			Notification:Close("Timeout")
+			return
 		end
+
+		TimerToken = TimerToken + 1
+		local CurrentToken = TimerToken
+		TimerStartedAt = os.clock()
+		Notification.Remaining = TimerRemaining
+
+		StopProgressTween()
+		local Ratio = TimerRemaining / Notification.Duration
+		SetProgressRatio(Ratio)
+		if AnimateProgress then
+			ProgressTween = Tween(
+				ProgressFill,
+				TimerRemaining,
+				{ Size = UDim2.new(0, 0, 1, 0) },
+				Enum.EasingStyle.Linear,
+				Enum.EasingDirection.InOut
+			)
+			ProgressTween:Play()
+		end
+
+		task.delay(TimerRemaining, function()
+			if CurrentToken == TimerToken and not Notification.Closed and not Notification.Paused then
+				TimerRemaining = 0
+				Notification.Remaining = 0
+				Notification:Close("Timeout")
+			end
+		end)
+	end
+
+	function Notification:Pause()
+		if not HasTimer or Notification.Closed or Notification.Paused then
+			return Notification
+		end
+
+		Notification.Paused = true
+		TimerToken = TimerToken + 1
+		CaptureRemainingTime()
+		StopProgressTween()
+		SetProgressRatio(TimerRemaining / Notification.Duration)
+		return Notification
+	end
+
+	function Notification:Resume()
+		if not HasTimer or Notification.Closed or not Notification.Paused then
+			return Notification
+		end
+
+		Notification.Paused = false
+		StartTimer()
+		return Notification
+	end
+
+	function Notification:GetRemainingDuration()
+		if not HasTimer then
+			return 0
+		end
+
+		local Remaining = TimerRemaining
+		if TimerStartedAt then
+			Remaining = math.max(Remaining - (os.clock() - TimerStartedAt), 0)
+		end
+		return Remaining
+	end
+
+	function Notification:Update(Changes)
+		if typeof(Changes) ~= "table" or Notification.Closed then
+			return Notification
+		end
+
+		if Changes.Title ~= nil then
+			Notification.Title = tostring(Changes.Title)
+			Title.Text = Notification.Title
+		end
+
+		if Changes.Content ~= nil then
+			Notification.Content = if Changes.Content == false then nil else tostring(Changes.Content)
+			Content.Text = Notification.Content or ""
+			Content.Visible = Notification.Content ~= nil
+		end
+
+		if Changes.Duration ~= nil then
+			local WasPaused = Notification.Paused
+			TimerToken = TimerToken + 1
+			CaptureRemainingTime()
+			StopProgressTween()
+			Notification.Duration = ResolveDuration(Changes.Duration)
+			HasTimer = typeof(Notification.Duration) == "number" and Notification.Duration > 0
+			AnimateProgress = HasTimer and Motion:IsEnabled() and not Motion.Reduced
+			TimerRemaining = if HasTimer then Notification.Duration else 0
+			Notification.Remaining = TimerRemaining
+			Notification.Paused = WasPaused
+			ProgressTrack.Visible = HasTimer
+			SetProgressRatio(if HasTimer then 1 else 0)
+			StartTimer()
+		end
+
+		UpdateTextHeight()
+		return Notification
+	end
+
+	function Notification:Close(Reason)
+		if Notification.Closed then
+			return Notification
+		end
+
+		Notification.Closed = true
+		Notification.CloseReason = tostring(Reason or "Manual")
+		TimerToken = TimerToken + 1
+		CaptureRemainingTime()
+		DisconnectSignals()
+		StopProgressTween()
 
 		Motion.Cancel(MainContainer, "Open")
 		Motion.Cancel(MainContainer, "Resize")
 		Motion.Cancel(Main, "Open")
+		Motion.Cancel(MainScale, "Open")
 		Motion.Play(
 			MainContainer,
 			"NotificationClose",
@@ -742,33 +1014,57 @@ function NotificationModule.New(Config)
 			Enum.EasingDirection.Out,
 			"Close"
 		)
+		Motion.Play(Main, "NotificationClose", {
+			Position = UDim2.new(0, EXIT_OFFSET, 0, 0),
+			GroupTransparency = 1,
+		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Close")
 		Motion.Play(
-			Main,
+			MainScale,
 			"NotificationClose",
-			{ Position = UDim2.new(0, 28, 0, 0) },
+			{ Scale = 0.98 },
 			Enum.EasingStyle.Quint,
 			Enum.EasingDirection.Out,
 			"Close"
 		)
 
-		local CloseDelay = if Motion:IsEnabled() and not Motion.Reduced then Motion.GetDuration("NotificationClose") + 0.02 else 0
+		Creator.SafeCallback(Notification.OnClose, Notification, Notification.CloseReason)
+
+		local CloseDelay = if Motion:IsEnabled() and not Motion.Reduced
+			then Motion.GetDuration("NotificationClose") + 0.02
+			else 0
 		task.delay(CloseDelay, function()
 			NotificationModule.Notifications[Notification.Index] = nil
 			if MainContainer.Parent then
 				MainContainer:Destroy()
 			end
 		end)
+
+		return Notification
 	end
 
 	if CloseButton then
 		Connect(CloseButton.MouseButton1Click, function()
-			Notification:Close()
+			Notification:Close("Dismissed")
+		end)
+	end
+
+	if Notification.PauseOnHover then
+		Connect(Main.MouseEnter, function()
+			Notification:Pause()
+		end)
+		Connect(Main.MouseLeave, function()
+			Notification:Resume()
 		end)
 	end
 
 	Notification.UIElements = {
 		Container = MainContainer,
-		Main = Main,
+		Main = Card,
+		Card = Card,
+		Transition = Main,
+		TransitionScale = MainScale,
+		Shadow = Shadow,
+		Stroke = CardStroke,
 		Body = Body,
 		Header = HeaderRow,
 		TextContainer = TextContainer,
@@ -776,6 +1072,7 @@ function NotificationModule.New(Config)
 		Content = Content,
 		IconBubble = IconBubble,
 		CloseButton = CloseButton,
+		CloseSurface = CloseSurface,
 		Actions = ActionRow,
 		ProgressTrack = ProgressTrack,
 		ProgressFill = ProgressFill,
@@ -804,36 +1101,14 @@ function NotificationModule.New(Config)
 			Enum.EasingDirection.Out,
 			"Open"
 		)
-		Motion.Play(
-			Main,
-			"Notification",
-			{ Position = UDim2.new(0, 0, 0, 0) },
-			Enum.EasingStyle.Quint,
-			Enum.EasingDirection.Out,
-			"Open"
-		)
+		Motion.Play(Main, "Notification", {
+			Position = UDim2.new(0, 0, 0, 0),
+			GroupTransparency = 0,
+		}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Open")
+		Motion.Play(MainScale, "Notification", { Scale = 1 }, Enum.EasingStyle.Quint, Enum.EasingDirection.Out, "Open")
 
-		if HasTimer then
-			TimerToken = TimerToken + 1
-			local CurrentToken = TimerToken
-			if AnimateProgress then
-				ProgressFill.Size = UDim2.fromScale(1, 1)
-				ProgressTween = Tween(
-					ProgressFill,
-					Notification.Duration,
-					{ Size = UDim2.new(0, 0, 1, 0) },
-					Enum.EasingStyle.Linear,
-					Enum.EasingDirection.InOut
-				)
-				ProgressTween:Play()
-			end
-
-			task.delay(Notification.Duration, function()
-				if CurrentToken == TimerToken and not Notification.Closed then
-					Notification:Close()
-				end
-			end)
-		end
+		Creator.SafeCallback(Notification.OnOpen, Notification)
+		StartTimer()
 	end)
 
 	return Notification

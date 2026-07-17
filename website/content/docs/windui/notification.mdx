@@ -13,7 +13,7 @@ import TypeTable from '@/components/TypeTable';
 
 Notifications are temporary messages displayed to inform users about events or status changes. They automatically disappear after a set duration.
 
-The notification stack is responsive from mobile to desktop, keeps the newest item at the top, and limits the visible stack to five items by default. Long titles and content wrap inside the card without overlapping the icon, close button, or progress bar.
+The notification stack is responsive from mobile to desktop, keeps the newest item at the top, and limits the visible stack to five items by default. Long titles and content wrap inside the glass card without overlapping the icon, close button, actions, or progress bar. Timed notifications pause while hovered so users have enough time to read or select an action.
 
 <Tabs defaultValue="small">
     <TabsList>
@@ -69,6 +69,47 @@ WindUI:Notify({
 
 Buttons close the notification after their callback by default. Set `Close = false` or `CloseOnClick = false` to keep it open.
 
+## Update and Timer Controls
+
+The returned notification can be updated in place or paused manually without creating another card.
+
+```luau
+local Notice = WindUI:Notify({
+    Title = "Downloading",
+    Content = "Preparing files...",
+    Duration = false,
+})
+
+Notice:Update({
+    Title = "Download complete",
+    Content = "All files are ready.",
+    Duration = 3,
+})
+
+Notice:Pause()
+Notice:Resume()
+print(Notice:GetRemainingDuration())
+```
+
+`Update` currently supports `Title`, `Content`, and `Duration`. Set `Content = false` to hide the content row.
+
+## Lifecycle Callbacks
+
+```luau
+WindUI:Notify({
+    Title = "Saved",
+    Style = "Success",
+    OnOpen = function(Notification)
+        print("Opened", Notification.Index)
+    end,
+    OnClose = function(Notification, Reason)
+        print("Closed because", Reason)
+    end,
+})
+```
+
+Close reasons include `Timeout`, `Dismissed`, `Action`, `Overflow`, and `Manual`.
+
 ## Styles
 
 Use `Style`, `Type`, or `Variant` to pick the notification preset. Aliases like `warn`, `successful`, and `green` are normalized automatically.
@@ -110,6 +151,9 @@ WindUI:Notify({
         { name: "MaxVisible", type: "number?", description: "Maximum notifications kept in the visible stack.", default: "5" },
         { name: "CanClose", type: "boolean?", description: "Show the close button.", default: "true" },
         { name: "Duration", type: "number | false?", description: "Display duration in seconds. Use false or 0 to keep it open.", default: "5" },
+        { name: "PauseOnHover", type: "boolean?", description: "Pause the timer and progress bar while the pointer is over the card.", default: "true" },
+        { name: "OnOpen", type: "(Notification) -> ()?", description: "Called after the card starts its open transition.", default: "nil" },
+        { name: "OnClose", type: "(Notification, Reason: string) -> ()?", description: "Called once when the card begins closing.", default: "nil" },
     ]}
 />
 

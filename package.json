@@ -18,6 +18,7 @@
         "docs:dev": "npm --prefix website run dev",
         "docs:build": "npm --prefix website run build",
         "docs:start": "npm --prefix website run start",
+        "verify:notification": "stylua --syntax Luau --check src/components/Notification.lua tests/Notification.lua && node tests/notification-layout-safety.test.js",
         "test:static": "node tests/acrylic-theme-safety.test.js && node tests/notification-layout-safety.test.js"
     },
     "keywords": [
