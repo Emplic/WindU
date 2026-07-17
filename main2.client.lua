@@ -22,7 +22,7 @@ do
 			WindUI = require(ReplicatedStorage:WaitForChild("WindUI"):WaitForChild("Init"))
 		else
 			WindUI = loadstring(
-				game:HttpGet("https://article-hub-studio.github.io/WindUI-Skibidi/loader.lua")
+				game:HttpGet("https://raw.githubusercontent.com/Emplic/WindU/refs/heads/main/loader.lua")
 			)()
 		end
 	end
