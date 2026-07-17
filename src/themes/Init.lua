@@ -244,17 +244,55 @@ return function(WindUI, Creator)
 		Midnight = {
 			Name = "Midnight",
 
-			Accent = Color3.fromHex("#1e3a8a"),
-			Dialog = Color3.fromHex("#0c1e42"),
-			--Outline = Color3.fromHex("#bfdbfe"),
-			Text = Color3.fromHex("#dbeafe"),
-			Placeholder = Color3.fromHex("#2f74d1"),
-			Background = Color3.fromHex("#0a0f1e"),
-			Button = Color3.fromHex("#2563eb"),
-			Primary = Color3.fromHex("#2563eb"),
-			Icon = Color3.fromHex("#5591f4"),
+			-- Deep navy surfaces with a cool moonlit blue accent.
+			Accent = WindUI:Gradient({
+				["0"] = { Color = Color3.fromHex("#6D8CFF"), Transparency = 0 },
+				["100"] = { Color = Color3.fromHex("#9B7BFF"), Transparency = 0 },
+			}, { Rotation = 35 }),
 
-			ElementBackground = Color3.fromHex("#242836"),
+			Dialog = WindUI:Gradient({
+				["0"] = { Color = Color3.fromHex("#111A33"), Transparency = 0 },
+				["100"] = { Color = Color3.fromHex("#17152D"), Transparency = 0 },
+			}, { Rotation = 120 }),
+
+			Outline = Color3.fromHex("#33446F"),
+			Text = Color3.fromHex("#F4F7FF"),
+			Placeholder = Color3.fromHex("#8997B8"),
+
+			Background = WindUI:Gradient({
+				["0"] = { Color = Color3.fromHex("#070B17"), Transparency = 0 },
+				["55"] = { Color = Color3.fromHex("#0B1124"), Transparency = 0 },
+				["100"] = { Color = Color3.fromHex("#120E24"), Transparency = 0 },
+			}, { Rotation = 145 }),
+
+			Button = WindUI:Gradient({
+				["0"] = { Color = Color3.fromHex("#4F73E8"), Transparency = 0 },
+				["100"] = { Color = Color3.fromHex("#7656D9"), Transparency = 0 },
+			}, { Rotation = 35 }),
+
+			Primary = Color3.fromHex("#6D8CFF"),
+			Icon = Color3.fromHex("#A9B9FF"),
+			Toggle = Color3.fromHex("#6D8CFF"),
+			Slider = Color3.fromHex("#8A7CFF"),
+			SliderIcon = Color3.fromHex("#D7DEFF"),
+			Checkbox = Color3.fromHex("#7A8FFF"),
+
+			DropdownTabBackground = Color3.fromHex("#171F38"),
+			DropdownBackground = Color3.fromHex("#0F162A"),
+
+			TabBackground = Color3.fromHex("#0D1427"),
+			TabBackgroundHover = Color3.fromHex("#182342"),
+			TabBackgroundHoverTransparency = 0,
+			TabBackgroundActive = Color3.fromHex("#202D52"),
+			TabBackgroundActiveTransparency = 0,
+
+			PanelBackground = Color3.fromHex("#17213B"),
+			PanelBackgroundTransparency = 0.18,
+
+			LabelBackground = Color3.fromHex("#111A30"),
+			LabelBackgroundTransparency = 0.12,
+
+			ElementBackground = Color3.fromHex("#151E35"),
 			ElementBackgroundTransparency = 0,
 		},
 
